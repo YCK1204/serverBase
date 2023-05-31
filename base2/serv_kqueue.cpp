@@ -25,7 +25,7 @@ int	main(int ac, char *av[])
 	int						serv_sock, clnt_sock, fd_max, str_len, fd_num, i;
 	char					buf[BUF_SIZE];
 	struct sockaddr_in		serv_adr, clnt_adr;
-	struct timeval			timeout;
+	struct timespec			timeout;
 	fd_set					reads, cpy_reads;
 	socklen_t				adr_sz;
      
@@ -70,12 +70,10 @@ int	main(int ac, char *av[])
     struct kevent event[4];
 	while (1)
 	{
-		cpy_reads = reads;
-		
-        new_events = kevent(kq, NULL, 0, event, 8, NULL);
-        if (new_events == -1)
-            err("kevent\n");
-		if (!fd_num)
+		timeout.tv_sec = 1;
+		timeout.tv_nsec = 5000;
+        new_events = kevent(kq, NULL, 0, event, 8, (const timespec*)&timeout);
+        if (new_events == 0)
 		{
 			std::cout << "Time-Out" << std::endl;
 			continue ;
@@ -86,7 +84,7 @@ int	main(int ac, char *av[])
 
             if (event[i].flags & EV_EOF)
             {
-                printf("Client has disconnected");
+                std::cout << "closed client : " << event_fd << std::endl;
                 close(event_fd);
             }
             // If the new event's file descriptor is the same as the listening
@@ -102,6 +100,7 @@ int	main(int ac, char *av[])
                 {
                     perror("Accept socket error");
                 }
+                std::cout << "connected : " << clnt_sock << std::endl;
 
                 // Put this new socket connection also as a 'filter' event
                 // to watch in kqueue, so we can now watch for events on this
@@ -120,32 +119,7 @@ int	main(int ac, char *av[])
                 size_t bytes_read = recv(event_fd, buf, sizeof(buf), 0);
                 printf("read %zu bytes\n", bytes_read);
             }
-			/*if (FD_ISSET(i, &cpy_reads))
-			{
-				if (i == serv_sock)
-				{
-					adr_sz = sizeof(clnt_adr);
-					clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_adr, &adr_sz);
-					FD_SET(clnt_sock, &reads);
-					if (fd_max < clnt_sock)
-						fd_max = clnt_sock;
-					std::cout << "connected clinet : " << clnt_sock << std::endl;
-				}
-				else
-				{
-					str_len = recv(i, buf, BUF_SIZE, 0);
-					buf[str_len] = 0;
-					std::cout << "server : " << buf << std::endl;
-					if (!str_len)
-					{
-						FD_CLR(i, &reads);
-						close(i);
-						std::cout << "closed client : " << i << std::endl;
-					}
-					else
-						write(i, buf, (size_t)str_len);
-				}
-			}*/
+			
 		}
 	}
 	close(serv_sock);
