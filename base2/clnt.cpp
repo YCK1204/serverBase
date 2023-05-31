@@ -43,7 +43,7 @@ int main(int ac, char *av[])
 		std::getline(std::cin, message);
 		msg = (char *)message.c_str();
 		send(sock, msg, strlen(msg), 0);
-		
+		usleep(5000);
 		str_len = recv(sock, msg, 100, 0);
 		if (str_len == 0)
 			break ;

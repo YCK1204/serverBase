@@ -110,6 +110,7 @@ int	main(int ac, char *av[])
                 {
                     perror("kevent error");
                 }
+                
             }
 
             else if (event[i].filter & EVFILT_READ)
@@ -118,6 +119,9 @@ int	main(int ac, char *av[])
                 char buf[1024];
                 size_t bytes_read = recv(event_fd, buf, sizeof(buf), 0);
                 printf("read %zu bytes\n", bytes_read);
+                buf[bytes_read] = '3';
+                buf[bytes_read + 1] = 0;
+                send(clnt_sock, buf, strlen(buf), 0);
             }
 			
 		}
