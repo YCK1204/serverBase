@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
-#define BUF_SIZE 100
+#define BUF_SIZE 1024
 
 void	err(const std::string &msg)
 {
@@ -26,7 +26,6 @@ int	main(int ac, char *av[])
 	char					buf[BUF_SIZE];
 	struct sockaddr_in		serv_adr, clnt_adr;
 	struct timespec			timeout;
-	fd_set					reads, cpy_reads;
 	socklen_t				adr_sz;
      
 
@@ -52,9 +51,6 @@ int	main(int ac, char *av[])
 		err("listen() error!\n");
     
 	fcntl(serv_sock, F_SETFL, O_NONBLOCK);
-
-	FD_ZERO(&reads);
-	FD_SET(serv_sock, &reads);
 
     /* init kqueue */
     int kq;
@@ -116,8 +112,7 @@ int	main(int ac, char *av[])
             else if (event[i].filter & EVFILT_READ)
             {
                 // Read bytes from socket
-                char buf[1024];
-                size_t bytes_read = recv(event_fd, buf, sizeof(buf), 0);
+                size_t bytes_read = recv(event_fd, buf, BUF_SIZE, 0);
                 printf("read %zu bytes\n", bytes_read);
                 buf[bytes_read] = '3';
                 buf[bytes_read + 1] = 0;

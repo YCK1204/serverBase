@@ -22,6 +22,7 @@ int main(int ac, char *av[])
 	std::string message;
 	struct sockaddr_in serv_adr;
 	char	*msg;
+	char	*msgs = new char(100);
 
 	if (ac != 3)
 	{
@@ -44,11 +45,12 @@ int main(int ac, char *av[])
 		msg = (char *)message.c_str();
 		send(sock, msg, strlen(msg), 0);
 		usleep(5000);
-		str_len = recv(sock, msg, 100, 0);
+		str_len = recv(sock, msgs, 100, 0);
+		msgs[str_len] = 0;
 		if (str_len == 0)
 			break ;
-		msg[str_len] = 0;
-		printf("client : %s\n", msg);
+		msgs[str_len] = 0;
+		printf("client : %s\n", msgs);
 		
 	}
 	close(sock);
