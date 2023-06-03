@@ -78,17 +78,21 @@ private:
     std::vector<std::pair<unsigned short, ServerBlock> >	server_block;
 
     Http();
-    
     Http &operator = (const Http &s);
 
     int     ft_stoi(const std::string &str);
+
     void    ParsingConfig(const std::string &path);
+    void    checkValidConfig();
+    void    checkOverllapServerPort(const unsigned short &port);
+    void    checkOverllapLocationRoot(const std::string &root, ServerBlock &server);
 
     void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
     std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
     void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);
     std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config, std::string &default_root);
-    
+    ServerBlock                             getServer(const int &port);
+    LocationBlock                           getLocation(const std::string &default_root, ServerBlock &server);
 
     class   NotValidConfigFileException : public std::exception
     {
@@ -115,15 +119,28 @@ private:
         public:
             const char *what() const throw();
     };
+    class EmptyFileException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class ServerPortOverllapException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class LocationRootOverllapException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
 public:
     Http(const std::string &path);
     ~Http();
 
     void        SettingHttp(void);
     void        ExitHttpError(const std::string &msg) const;
-    ServerBlock getServer(const int &port);
-    LocationBlock getLocation(const std::string &default_root, ServerBlock &server);
-    void    printServerInfo(const unsigned short &port);
+    void        printConfigInfo();
 };
 
 #endif

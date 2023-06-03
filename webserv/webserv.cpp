@@ -5,7 +5,7 @@ int main(int ac, char *av[])
     try
     {
         Http serv(static_cast<std::string>(av[1]));
-        serv.printServerInfo(8002);
+        serv.printConfigInfo();
         
     }
     catch (std::exception &e)

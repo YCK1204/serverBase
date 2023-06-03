@@ -4,9 +4,47 @@ Http::Http() {}
 Http::Http(const std::string &path)
 {
 	ParsingConfig(path);
+	checkValidConfig();
 }
 Http::~Http() {}
 
+void    Http::checkOverllapLocationRoot(const std::string &root, ServerBlock &server)
+{
+	int	cnt = 0;
+
+	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
+	{
+		if (!it->first.compare(root))
+			cnt++;
+	}
+	if (cnt >= 2)
+		throw LocationRootOverllapException();
+}
+
+void    Http::checkOverllapServerPort(const unsigned short &port)
+{
+	int	cnt = 0;
+
+	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
+	{
+		if (it->first == port)
+			cnt++;
+	}
+	if (cnt >= 2)
+		throw ServerPortOverllapException();
+}
+
+void	Http::checkValidConfig()
+{
+	std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin();
+	
+	for (; it != this->server_block.end(); it++)
+	{
+		checkOverllapServerPort(it->first);
+		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = it->second.location_block.begin(); itt != it->second.location_block.end(); itt++)
+			checkOverllapLocationRoot(itt->first, it->second);
+	}
+}
 
 void	Http::server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret)
 {
@@ -139,6 +177,7 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 	int			cnt[6] = {};
 
 	ret.client_body_size = 0;
+	ret.port = 80;
 	while (1)
 	{
 		line.clear();
@@ -217,6 +256,8 @@ void    Http::ParsingConfig(const std::string &path)
 		else
 			throw	NotValidConfigFileException();
 	}
+	if (!this->server_block.size())
+		throw	EmptyFileException();
 }
 
 int Http::ft_stoi(const std::string &str)
@@ -244,56 +285,59 @@ void    Http::ExitHttpError(const std::string &msg) const
     exit(1);
 }
 
-void    Http::printServerInfo(const unsigned short &port)
+void	Http::printConfigInfo()
 {
 	try
 	{
-		ServerBlock server = getServer(port);
-		std::cout << "server {" << std::endl;
-        std::cout << "    listen " << server.port << std::endl;
-		if (!server.server_name.empty())
-        	std::cout << "    server_name " << server.server_name << std::endl;
-		if (!server.root.empty())
-       		std::cout << "    root " << server.root << std::endl;
-		if (server.client_body_size)
-    	    std::cout << "    client_body_size " << server.client_body_size << std::endl;
-		if (!server.index.empty())
-	        std::cout << "    idnex " << server.index << std::endl;
-		if (!server.error_page.empty())
-        	std::cout << "    error_page " << server.error_page << std::endl;
-		for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
+		for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator itt = this->server_block.begin(); itt != this->server_block.end(); itt++)
 		{
-			LocationBlock location = it->second;
-			
-			std::cout << std::endl;
-			std::cout << "    location " + location.default_root + " {" << std::endl;
-			std::cout << "        allow_methods ";
-			for (int i = 0; i < 3; i++)
+			ServerBlock server = itt->second;
+			std::cout << "server {" << std::endl;
+			std::cout << "    listen " << server.port << std::endl;
+			if (!server.server_name.empty())
+				std::cout << "    server_name " << server.server_name << std::endl;
+			if (!server.root.empty())
+				std::cout << "    root " << server.root << std::endl;
+			if (server.client_body_size)
+				std::cout << "    client_body_size " << server.client_body_size << std::endl;
+			if (!server.index.empty())
+				std::cout << "    idnex " << server.index << std::endl;
+			if (!server.error_page.empty())
+				std::cout << "    error_page " << server.error_page << std::endl;
+			for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
 			{
-				if (location.methods[i])
+				LocationBlock location = it->second;
+				
+				std::cout << std::endl;
+				std::cout << "    location " + location.default_root + " {" << std::endl;
+				std::cout << "        allow_methods ";
+				for (int i = 0; i < 3; i++)
 				{
-					if (i == GET)
-						std::cout << "GET ";
-					else if (i == POST)
-						std::cout << "POST ";
-					else if (i == DELETE)
-						std::cout << "DELETE ";
+					if (location.methods[i])
+					{
+						if (i == GET)
+							std::cout << "GET ";
+						else if (i == POST)
+							std::cout << "POST ";
+						else if (i == DELETE)
+							std::cout << "DELETE ";
+					}
 				}
+				std::cout << std::endl;
+				if (location.autoindex)
+					std::cout << "        autoindex on" << std::endl;
+				if (!location.root.empty()) 
+					std::cout << "        root " << location.root << std::endl;
+				if (!location.index.empty())
+					std::cout << "        index " << location.index << std::endl;
+				if (location.ret)
+					std::cout << "        return " << location.redirect << std::endl;
+				if (!location.cgi_bin.empty())
+					std::cout << "        cgi-bin " << location.cgi_bin << std::endl;
+				std::cout << "    }" << std::endl;
 			}
-			std::cout << std::endl;
-			if (location.autoindex)
-				std::cout << "        autoindex on" << std::endl;
-			if (!location.root.empty()) 
-				std::cout << "        root " << location.root << std::endl;
-			if (!location.index.empty())
-				std::cout << "        index " << location.index << std::endl;
-			if (location.ret)
-				std::cout << "        return " << location.redirect << std::endl;
-			if (!location.cgi_bin.empty())
-				std::cout << "        cgi-bin " << location.cgi_bin << std::endl;
-			std::cout << "    }" << std::endl;
+			std::cout << "}\n" << std::endl;
 		}
-        std::cout << "}" << std::endl;
 	}
 	catch (std::exception &e)
 	{
@@ -340,4 +384,19 @@ const char *Http::NoSuchServerPort::what() const throw()
 const char *Http::NoSuchLocationBlock::what() const throw()
 {
 	return ("Error : No Such Location Block");
+}
+
+const char *Http::EmptyFileException::what() const throw()
+{
+	return ("Error : Empty File");
+}
+
+const char *Http::ServerPortOverllapException::what() const throw()
+{
+	return ("Error : Server Port Overllap");
+}
+
+const char *Http::LocationRootOverllapException::what() const throw()
+{
+	return ("Error : Location Block Default Root Overllap");
 }
