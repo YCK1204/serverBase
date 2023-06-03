@@ -2,11 +2,11 @@
 
 int main(int ac, char *av[])
 {
-    Http    serv;
-
     try
     {
-        serv.ParsingConfig(static_cast<std::string>(av[1]));
+        Http serv(static_cast<std::string>(av[1]));
+        serv.printServerInfo(8002);
+        
     }
     catch (std::exception &e)
     {

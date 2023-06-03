@@ -16,20 +16,38 @@
 #include <iterator>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
-enum type
+enum s_block_type
 {
     LISTEN,
-    ROOT,
+    S_ROOT,
     SERVER_NAME,
     ERROR_PAGE,
-    INDEX,
+    S_INDEX,
     BODY_SIZE
+};
+
+enum methods
+{
+    GET,
+    POST,
+    DELETE
+};
+
+enum l_block_type
+{
+    METHOD,
+    AUTOINDEX,
+    L_ROOT,
+    L_INDEX,
+    RETURN,
+    CGI
 };
 
 typedef struct
 {
-	std::vector<std::string>	allow_methods;
+	bool                        methods[3];
 	bool						autoindex;
 	bool						ret;
 	std::string					root;
@@ -41,12 +59,12 @@ typedef struct
 
 typedef struct
 {
-	std::vector<std::pair<std::string, LocationBlock> > location;
+    std::vector<std::pair<std::string, LocationBlock> > location_block;
     std::string                 error_page;
 	std::string					root;
 	std::string					server_name;
     std::string					index;
-	int         				client_body_size;
+	int   		            	client_body_size;
     unsigned short              port;
 }	ServerBlock;
 
@@ -57,15 +75,21 @@ private:
     struct sockaddr_in serv_adr, clnt_adr;
     struct timespec timeout;
     socklen_t adr_sz;
-    std::vector<std::pair<int, ServerBlock> >	server_block;
+    std::vector<std::pair<unsigned short, ServerBlock> >	server_block;
 
-    Http(const Http &s);
+    Http();
+    
     Http &operator = (const Http &s);
 
     int     ft_stoi(const std::string &str);
-    void	server_block_argu_split(std::stringstream &ss, type t, ServerBlock &ret);
-    std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config);
+    void    ParsingConfig(const std::string &path);
+
+    void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
     std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
+    void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);
+    std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config, std::string &default_root);
+    
+
     class   NotValidConfigFileException : public std::exception
     {
         public:
@@ -81,12 +105,25 @@ private:
         public:
             const char *what() const throw();
     };
+    class NoSuchServerPort :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class NoSuchLocationBlock :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
 public:
-    Http();
+    Http(const std::string &path);
     ~Http();
-    void    ParsingConfig(const std::string &path);
-    void    SettingHttp(void);
-    void    ExitHttpError(const std::string &msg) const;
+
+    void        SettingHttp(void);
+    void        ExitHttpError(const std::string &msg) const;
+    ServerBlock getServer(const int &port);
+    LocationBlock getLocation(const std::string &default_root, ServerBlock &server);
+    void    printServerInfo(const unsigned short &port);
 };
 
 #endif
