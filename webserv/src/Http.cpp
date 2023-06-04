@@ -51,10 +51,8 @@ void    Http::checkExistFile()
 			if (server.index.empty())
 				throw noSuchFileException();
 			tmp.open((server.root + server.index.substr(1)).c_str());
-			std::cout << server.root + server.index.substr(1) << std::endl;
 			if (!tmp.is_open())
-				throw noSuchFileException();
-			
+				throw noSuchFileException();			
 			tmp.close();
 			tmp.clear();
 			server.index_root = (server.root + server.index.substr(1));
@@ -291,10 +289,7 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 		if (cnt[i] != 1)
 			throw	NotValidConfigFileException();
 	if (cnt[4] >= 2 || cnt[5] >= 2 || cnt[6] >= 2 || CloseBraceCnt != 1)
-	{
-		std::cout << "dasfcv" << std::endl;
 		throw	NotValidConfigFileException();
-	}
 	return (std::make_pair(ret.port, ret));
 }
 
