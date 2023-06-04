@@ -5,8 +5,26 @@ Http::Http(const std::string &path)
 {
 	ParsingConfig(path);
 	checkValidConfig();
+	checkExistFile();
 }
 Http::~Http() {}
+
+void	Http::checkValidAddr(const std::string &host)
+{
+	size_t	len;
+	size_t	temp = 0;
+	int		cnt = 0;
+
+	for (; (len = host.find(".", temp)) != std::string::npos;)
+	{
+		cnt++;
+		if (ft_stoi(host.substr(temp, len - temp)) > 255)
+			throw notValidAddrException();
+		temp = len + 1;
+	}
+	if (ft_stoi(host.substr(temp)) > 255 || cnt != 3)
+		throw notValidAddrException();
+}
 
 void    Http::checkOverllapLocationRoot(const std::string &root, ServerBlock &server)
 {
@@ -19,6 +37,51 @@ void    Http::checkOverllapLocationRoot(const std::string &root, ServerBlock &se
 	}
 	if (cnt >= 2)
 		throw LocationRootOverllapException();
+}
+
+void    Http::checkExistFile()
+{
+	std::ifstream	tmp;
+
+	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
+	{
+		ServerBlock	&server = it->second;
+		if (!server.root.empty())
+		{
+			if (server.index.empty())
+				throw noSuchFileException();
+			tmp.open((server.root + server.index.substr(1)).c_str());
+			if (!tmp.is_open())
+				throw noSuchFileException();
+			tmp.close();
+			tmp.clear();
+			server.index_root = (server.root + server.index.substr(1));
+		}
+		tmp.open((server.root + server.error_page.substr(1)).c_str());
+		if (!tmp.is_open())
+			throw noSuchFileException();
+		tmp.close();
+		tmp.clear();
+		server.index_root = (server.root + server.error_page.substr(1));
+		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = server.location_block.begin(); itt != server.location_block.end(); itt++)
+		{
+			LocationBlock	&location = itt->second;
+
+			if (!location.root.empty())
+			{
+				if (location.index.empty())
+					throw noSuchFileException();
+				tmp.open((location.root + location.index.substr(1)).c_str());
+				if (!tmp.is_open())
+					throw noSuchFileException();
+				tmp.close();
+				tmp.clear();
+				location.index_root = (location.root + location.index.substr(1));
+			}
+			else
+				location.index_root = server.index_root;
+		}
+	}
 }
 
 void    Http::checkOverllapServerPort(const unsigned short &port)
@@ -41,6 +104,7 @@ void	Http::checkValidConfig()
 	for (; it != this->server_block.end(); it++)
 	{
 		checkOverllapServerPort(it->first);
+		checkValidAddr(it->second.host);
 		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = it->second.location_block.begin(); itt != it->second.location_block.end(); itt++)
 			checkOverllapLocationRoot(itt->first, it->second);
 	}
@@ -68,6 +132,8 @@ void	Http::server_block_argu_split(std::stringstream &ss, s_block_type t, Server
 		ret.index = tmp;
 	else if (t == BODY_SIZE)
 		ret.client_body_size = val;
+	else if (t == HOST)
+		ret.host = tmp;
 }
 
 void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret)
@@ -174,7 +240,7 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 	ServerBlock	ret;
 	std::string	line, cmd, temp, tmp, tt;
 	int			CloseBraceCnt = 0;
-	int			cnt[6] = {};
+	int			cnt[7] = {};
 
 	ret.client_body_size = 0;
 	ret.port = 80;
@@ -199,16 +265,18 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 		}
 		else if (!cmd.compare("listen") && ++cnt[LISTEN])
 			server_block_argu_split(ss, LISTEN, ret);
+		else if (!cmd.compare("error_page") && ++cnt[ERROR_PAGE])
+			server_block_argu_split(ss, ERROR_PAGE, ret);
+		else if (!cmd.compare("host") && ++cnt[HOST])
+			server_block_argu_split(ss, HOST, ret);
+		else if (!cmd.compare("client_body_size") && ++cnt[BODY_SIZE])
+			server_block_argu_split(ss, BODY_SIZE, ret);
+		else if (!cmd.compare("index") && ++cnt[S_INDEX])
+			server_block_argu_split(ss, S_INDEX, ret);
 		else if (!cmd.compare("root") && ++cnt[S_ROOT])
 			server_block_argu_split(ss, S_ROOT, ret);
 		else if (!cmd.compare("server_name") && ++cnt[SERVER_NAME])
 			server_block_argu_split(ss, SERVER_NAME, ret);
-		else if (!cmd.compare("error_page") && ++cnt[ERROR_PAGE])
-			server_block_argu_split(ss, ERROR_PAGE, ret);
-		else if (!cmd.compare("index") && ++cnt[S_INDEX])
-			server_block_argu_split(ss, S_INDEX, ret);
-		else if (!cmd.compare("client_body_size") && ++cnt[BODY_SIZE])
-			server_block_argu_split(ss, BODY_SIZE, ret);
 		else if (!cmd.compare("location"))
 		{
 			ss >> temp >> tmp >> tt;
@@ -217,10 +285,10 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 			ret.location_block.push_back(location_block_split(config, temp));
 		}
 	}
-	for (int i = 0; i < 6; i++)
-		if (cnt[i] >= 2)
+	for (int i = 0; i < 4; i++)
+		if (cnt[i] != 1)
 			throw	NotValidConfigFileException();
-	if (CloseBraceCnt != 1)
+	if (cnt[4] >= 2 || cnt[5] >= 2 || cnt[6] >= 2 || CloseBraceCnt != 1)
 	{
 		std::cout << "dasfcv" << std::endl;
 		throw	NotValidConfigFileException();
@@ -304,6 +372,9 @@ void	Http::printConfigInfo()
 				std::cout << "    idnex " << server.index << std::endl;
 			if (!server.error_page.empty())
 				std::cout << "    error_page " << server.error_page << std::endl;
+			if (!server.index_root.empty())
+				std::cout << "    index_root " << server.index_root << std::endl;
+			std::cout << "    host " << server.host << std::endl;
 			for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
 			{
 				LocationBlock location = it->second;
@@ -334,6 +405,7 @@ void	Http::printConfigInfo()
 					std::cout << "        return " << location.redirect << std::endl;
 				if (!location.cgi_bin.empty())
 					std::cout << "        cgi-bin " << location.cgi_bin << std::endl;
+				std::cout << "        index_root " << location.index_root << std::endl;
 				std::cout << "    }" << std::endl;
 			}
 			std::cout << "}\n" << std::endl;
@@ -399,4 +471,14 @@ const char *Http::ServerPortOverllapException::what() const throw()
 const char *Http::LocationRootOverllapException::what() const throw()
 {
 	return ("Error : Location Block Default Root Overllap");
+}
+
+const char *Http::noSuchFileException::what() const throw()
+{
+	return ("Error : No Such File");
+}
+
+const char *Http::notValidAddrException::what() const throw()
+{
+	return ("Error : Is Not Valid Address");
 }

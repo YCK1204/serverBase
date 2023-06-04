@@ -21,11 +21,12 @@
 enum s_block_type
 {
     LISTEN,
-    S_ROOT,
-    SERVER_NAME,
     ERROR_PAGE,
+    HOST,
+    BODY_SIZE,
     S_INDEX,
-    BODY_SIZE
+    S_ROOT,
+    SERVER_NAME
 };
 
 enum methods
@@ -55,6 +56,7 @@ typedef struct
 	std::string					cgi_bin;
 	std::string					redirect;
 	std::string					default_root;
+    std::string                 index_root;
 }	LocationBlock;
 
 typedef struct
@@ -64,8 +66,10 @@ typedef struct
 	std::string					root;
 	std::string					server_name;
     std::string					index;
+    std::string                 host;
 	int   		            	client_body_size;
     unsigned short              port;
+    std::string                 index_root;
 }	ServerBlock;
 
 class Http
@@ -82,10 +86,12 @@ private:
 
     int     ft_stoi(const std::string &str);
 
+    void    checkExistFile();
     void    ParsingConfig(const std::string &path);
     void    checkValidConfig();
     void    checkOverllapServerPort(const unsigned short &port);
     void    checkOverllapLocationRoot(const std::string &root, ServerBlock &server);
+    void	checkValidAddr(const std::string &host);
 
     void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
     std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
@@ -130,6 +136,16 @@ private:
             const char *what() const throw();
     };
     class LocationRootOverllapException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class noSuchFileException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class notValidAddrException :  public std::exception
     {
         public:
             const char *what() const throw();
