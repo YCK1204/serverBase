@@ -1,4 +1,4 @@
-#include "Http.hpp"
+#include "../header/Http.hpp"
 
 Http::Http() {}
 Http::Http(const std::string &path)
@@ -51,8 +51,10 @@ void    Http::checkExistFile()
 			if (server.index.empty())
 				throw noSuchFileException();
 			tmp.open((server.root + server.index.substr(1)).c_str());
+			std::cout << server.root + server.index.substr(1) << std::endl;
 			if (!tmp.is_open())
 				throw noSuchFileException();
+			
 			tmp.close();
 			tmp.clear();
 			server.index_root = (server.root + server.index.substr(1));
