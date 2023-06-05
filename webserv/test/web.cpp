@@ -8,6 +8,7 @@
 #include <sys/event.h>
 
 #define BUF_SIZE 1024
+#define SMALL_BUF 1024
 #define MAX_EVENTS 100
 
 void send_data(int clnt_sock, char* ct, char* file_name);

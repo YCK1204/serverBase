@@ -8,8 +8,6 @@ int main(int ac, char *av[])
 		{
 			std::cout << av[1] << std::endl;
 			Http serv(static_cast<std::string>(av[1]));
-			serv.printConfigInfo();
-
 		}
 		catch (std::exception &e)
 		{

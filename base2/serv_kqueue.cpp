@@ -116,6 +116,7 @@ int	main(int ac, char *av[])
                 printf("read %zu bytes\n", bytes_read);
                 buf[bytes_read] = '3';
                 buf[bytes_read + 1] = 0;
+                printf("%s\n", buf);
                 send(clnt_sock, buf, strlen(buf), 0);
             }
 			

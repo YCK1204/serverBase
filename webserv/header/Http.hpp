@@ -14,9 +14,27 @@
 #include <sys/types.h>
 #include <vector>
 #include <iterator>
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+
+#define LISTEN_SIZE 20
+#define BUF_SIZE 2048
+#define SMALL_BUF 2048
+#define MAX_EVENTS 100
+
+enum exception
+{
+    CONFIG,
+    FILEROOT,
+    EMPTY,
+    PORT,
+    ROOT,
+    ADDR,
+    HTTP,
+    SERVER
+};
 
 enum s_block_type
 {
@@ -70,35 +88,41 @@ typedef struct
 	int   		            	client_body_size;
     unsigned short              port;
     std::string                 index_root;
+    int                         serv_sock;
+    struct sockaddr_in          serv_adr;
+    struct kevent               chagelist;
 }	ServerBlock;
 
 class Http
 {
 private:
-    int serv_sock, clnt_sock, fd_max, read_len, fd_num, i;
-    struct sockaddr_in serv_adr, clnt_adr;
-    struct timespec timeout;
-    socklen_t adr_sz;
+    int kq;
     std::vector<std::pair<unsigned short, ServerBlock> >	server_block;
 
     Http();
     Http &operator = (const Http &s);
 
-    int     ft_stoi(const std::string &str);
+    int         ft_stoi(const std::string &str);
+    uint16_t    ft_ntohs(uint16_t port);
+    std::string ft_inet_ntoa(uint32_t ipaddr);
 
-    void    checkExistFile();
-    void    ParsingConfig(const std::string &path);
-    void    checkValidConfig();
-    void    checkOverllapServerPort(const unsigned short &port);
-    void    checkOverllapLocationRoot(const std::string &root, ServerBlock &server);
-    void	checkValidAddr(const std::string &host);
+    void        checkExistFile();
+    void        ParsingConfig(const std::string &path);
+    void        checkValidConfig();
+    void        checkOverlapServerPort(const unsigned short &port);
+    void        checkOverlapLocationRoot(const std::string &root, ServerBlock &server);
+    void	    checkValidAddr(const std::string &host);
+    void        occurException(const std::string &msg, exception type);
+    void        runServer();
+    void        send_data(int clnt_sock, std::string file_name);
+    void        SettingHttp();
+    void        send_error(int clnt_sock);
+    std::string	findRoot(ServerBlock &server, std::string file_name);
 
     void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
     std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
     void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);
     std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config, std::string &default_root);
-    ServerBlock                             getServer(const int &port);
-    LocationBlock                           getLocation(const std::string &default_root, ServerBlock &server);
 
     class   NotValidConfigFileException : public std::exception
     {
@@ -110,37 +134,17 @@ private:
         public:
             const char *what() const throw();
     };
-    class SettingHttpExcecption : public std::exception
-    {
-        public:
-            const char *what() const throw();
-    };
-    class NoSuchServerPort :  public std::exception
-    {
-        public:
-            const char *what() const throw();
-    };
-    class NoSuchLocationBlock :  public std::exception
-    {
-        public:
-            const char *what() const throw();
-    };
     class EmptyFileException :  public std::exception
     {
         public:
             const char *what() const throw();
     };
-    class ServerPortOverllapException :  public std::exception
+    class ServerPortOverlapException :  public std::exception
     {
         public:
             const char *what() const throw();
     };
-    class LocationRootOverllapException :  public std::exception
-    {
-        public:
-            const char *what() const throw();
-    };
-    class noSuchFileException :  public std::exception
+    class LocationRootOverlapException :  public std::exception
     {
         public:
             const char *what() const throw();
@@ -150,12 +154,20 @@ private:
         public:
             const char *what() const throw();
     };
+    class SettingHttpException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
+    class RunServerException :  public std::exception
+    {
+        public:
+            const char *what() const throw();
+    };
 public:
     Http(const std::string &path);
     ~Http();
 
-    void        SettingHttp(void);
-    void        ExitHttpError(const std::string &msg) const;
     void        printConfigInfo();
 };
 
