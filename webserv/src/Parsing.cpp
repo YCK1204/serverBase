@@ -193,6 +193,7 @@ std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &
 	for (int i = 0; i < 3; i++)
 		ret.methods[i] = true;
 	ret.default_root = default_root;
+	ret.ret = false;
 	while (1)
 	{
 		line.clear();

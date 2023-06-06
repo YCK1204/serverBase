@@ -73,27 +73,8 @@ void    Http::runServer()
 
 					std::string method, file_name;
 					std::stringstream req_msg(req_line);
-					std::stringstream tmp(req_line);
-					std::string line;
-					while (std::getline(tmp, line)) 
-						std::cout << "line : " << line << std::endl;
-					req_msg >> method >> file_name;
-					std::cout << "req line" << req_line << std::endl;
-
-					std::cout << "method" << method << std::endl;
-					std::cout << "file_name" << file_name << std::endl;
-					req_msg >> method;
-					std::cout << "HTTP" << method << std::endl;
-					req_msg >> method;
-					std::cout << "ver" << method << std::endl;
-					req_msg >> method;
-					std::cout << "HTTP" << method << std::endl;
-					if (method.compare("GET")) {
-						// send_error(sockfd)
-						// close(sockfd);
-						continue ;
-					}
-					send_data(sockfd, findRoot(server, file_name));
+					send_data(sockfd, server, req_line);
+					// send_data(sockfd, findRoot(server, file_name));
 					close(sockfd);
 				}
 			}
@@ -104,62 +85,13 @@ void    Http::runServer()
 		close(it->second.serv_sock);
 }
 
-void Http::send_error(int clnt_sock) { 
-    char protocol[]="HTTP/1.1 400 Bad Request\r\n";
-    char server[]="Server:Linux Web Server \r\n";
-    char cnt_len[]="Content-length:2048\r\n";
-    char cnt_type[]="Content-type:text/html\r\n\r\n";
-    char content[]="<html><head><title>NETWORK</title></head>"
-           "<body><font size=+5><br>오류 발생! 요청 파일명 및 요청 방식 확인!"
-           "</font></body></html>";
-
-    write(clnt_sock, protocol, strlen(protocol));
-    write(clnt_sock, server, strlen(server));
-    write(clnt_sock, cnt_len, strlen(cnt_len));
-    write(clnt_sock, cnt_type, strlen(cnt_type));
-    write(clnt_sock, content, strlen(content));
-}
-
-std::string	Http::findRoot(ServerBlock &server, std::string file_name) {
-	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++) {
-		std::cout << "location root : " << it->second.default_root << ", file_name : " << file_name << std::endl;
-		if (!it->second.default_root.compare(file_name))
-			return (it->second.index_root);
-	}
-	return ("");
-}
-
-void    Http::send_data(int clnt_sock, std::string file_name) {
-	char protocol[]="HTTP/1.1 200 OK\r\n";
-    char server[]="Server:Linux Web Server \r\n";
-    char cnt_len[]="Content-length:2048\r\n";
-	const char *type;
-	std::string ct = "text/html";
+void	Http::send_data(int clnt_sock, ServerBlock &server, char *msg) {
+	const char	*ResponseMsg;
+	const char	*file;
 	
-	std::string tmp;
-	std::string cnt_type = "Content-type:" + ct + "\r\n\r\n";
-	std::ifstream file;
-
-	std::cout << "파일 네임 : " + file_name << std::endl;
-	file.open(file_name.c_str());
-    if(!file.is_open()) {
-		std::cout << "에러 발생 !!!!!!!!!!!!!! " << std::endl;
-        send_error(clnt_sock);
-        return;
-    }
-	type = cnt_type.c_str();
-
-    write(clnt_sock, protocol, strlen(protocol));
-    write(clnt_sock, server, strlen(server));
-    write(clnt_sock, cnt_len, strlen(cnt_len));
-    write(clnt_sock, type, std::strlen(type));
-	std::cout << "this" << std::endl;
-	while (std::getline(file, tmp)) {
-		tmp += '\n';
-		const char *msg = tmp.c_str();
-		std::cout << tmp << std::endl;
-		write(clnt_sock, msg, std::strlen(msg));
-	}
-	std::cout << "this" << std::endl;
-	file.close();
+	std::pair<std::string, std::string>	data = makeResponse(server, msg);
+	ResponseMsg = data.first.c_str();
+	file = data.second.c_str();
+	write(clnt_sock, ResponseMsg, std::strlen(ResponseMsg));
+	write(clnt_sock, file, std::strlen(file));
 }
