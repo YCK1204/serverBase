@@ -122,7 +122,6 @@ private:
     std::string                                         checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, ServerBlock &server, std::vector<std::pair<std::string, LocationBlock> >::iterator it);
     std::string                                         setResponseLine(LocationBlock &location, ServerBlock &server, size_t const &ResponseCode, std::string msg);
     std::string                                         readFile(ServerBlock &server, LocationBlock &location, std::string &msg);
-    std::string                                         extractResponseCode(std::string msg);
 
     void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
     void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);

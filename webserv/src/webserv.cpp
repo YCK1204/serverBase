@@ -5,10 +5,8 @@ int main(int ac, char *av[]) {
 	
 	if (ac == 2) {
 		try {
-			std::cout << av[1] << std::endl;
 			Http serv(static_cast<std::string>(av[1]));
-		}
-		catch (std::exception &e) {
+		} catch (std::exception &e) {
 			ret = 1;
 			std::cerr << e.what() << std::endl;
 		}

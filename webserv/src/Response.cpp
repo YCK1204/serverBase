@@ -7,34 +7,31 @@ std::string Http::setResponseLine(LocationBlock &location, ServerBlock &server, 
 
     ss << ResponseCode;
     ss >> tmp;
-    ret += tmp + " " + msg + "\r\n"
-           "Server:" + server.server_name + "\r\n";
+    ret += tmp + " " + msg + "\r\n";
+    if (location.ret)
+        ret += "Location:" + location.redirect + "\r\n\r\n";
+    ret += "Server:" + server.server_name + "\r\n";
     ss << BUF_SIZE;
     ss >> tmp;
     ret += "Content-lenght:" + tmp + "\r\n";
-    if (ResponseCode == 404 || location.index_root.find(".html", 1) != std::string::npos)
+    if (location.cgi_bin.empty() || location.index_root.find(".html", 1) != std::string::npos)
         ret += "Content-type:text/html\r\n\r\n";
     else
         ret += "Content-type:text/plain\r\n\r\n";
+
     return ret;
 }
 
 std::string Http::checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, ServerBlock &server, std::vector<std::pair<std::string, LocationBlock> >::iterator it) {
     if (method.compare("GET") && method.compare("POST") && method.compare("DELETE"))
-    {
-        std::cout << "first" << std::endl;
         return setResponseLine(it->second, server, 
             501, "Not Implemented"
         );
-    }
     else if (it != server.location_block.end() && (!method.compare("GET") && !it->second.methods[GET]) || (!method.compare("POST") && !it->second.methods[POST])\
                 || (!method.compare("DELETE") && !it->second.methods[DELETE]))
-                {
-                    std::cout << "second" << std::endl;
         return setResponseLine(it->second, server, 
             501, "Not Implemented"
         );
-                }
     else if (it == server.location_block.end())
         return setResponseLine(it->second, server, 
             404, "Not Found"
@@ -44,12 +41,9 @@ std::string Http::checkValidRequestLine(std::string &method, std::string &root, 
             414, "Request-URI Too Long"
         );
     else if (http_ver.substr(0, 4).compare("HTTP"))
-    {
-        std::cout << "third" << std::endl;
         return setResponseLine(it->second, server, 
             501, "Not Implemented"
         );
-    }
     else if (http_ver.substr(5).compare("1.1"))
         return setResponseLine(it->second, server, 
             505, "HTTP Version Not Supported"
@@ -60,18 +54,9 @@ std::string Http::checkValidRequestLine(std::string &method, std::string &root, 
         );
     else if (it->second.ret)
         return setResponseLine(it->second, server, 
-            301, "Moved Permanently"
+            301, "Moved Permanently" 
         );
     return setResponseLine(it->second, server, 200, "OK");
-}
-
-std::string Http::extractResponseCode(std::string msg) {
-    int i;
-    for (i = 0; msg[i]; i++){
-        if ('1' <= msg[i] && msg[i] <= '5')
-            break ;
-    }
-    return msg.substr(i, 3);
 }
 
 std::string Http::readFile(ServerBlock &server, LocationBlock &location, std::string &msg) {
@@ -108,7 +93,6 @@ std::pair<std::string, std::string> Http::makeResponse(ServerBlock &server, char
     std::vector<std::pair<std::string, LocationBlock> >::iterator it;
     std::stringstream ss, s;
 
-    std::cout << "msg : " << msg << std::endl;
     ss << msg;
     std::string tmp;
     std::getline(ss, tmp);

@@ -9,7 +9,6 @@ Http::Http(const std::string &path)
 	checkValidConfig();
 	checkExistFile();
 	SettingHttp();
-	printConfigInfo();
 	runServer();
 }
 Http::~Http() {}
@@ -45,42 +44,48 @@ void    Http::runServer()
 	struct sockaddr_in clnt_adr;
 	socklen_t clnt_adr_size;
 	struct kevent evlist[MAX_EVENTS];
-
+	std::string tmp;
+	bool		acpt;
+	ServerBlock	server;
 	while (!flag) {
 		if ((nevents = kevent(this->kq, NULL, 0, evlist, MAX_EVENTS, NULL)) == -1)
 			occurException("kevent()", SERVER);
 		for (int i = 0; i < nevents; i++) {
 			sockfd = evlist[i].ident;
+			acpt = false;
 			for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
-				ServerBlock &server = it->second;
+				server = it->second;
 				if (sockfd == server.serv_sock) {
 					clnt_adr_size = sizeof(clnt_adr);
 					if ((clnt_sock = accept(sockfd, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1)
 						occurException("accept()", SERVER);
-					std::cout << "Connection Request : " << ft_inet_ntoa(clnt_adr.sin_addr.s_addr) << " : " << ft_ntohs(clnt_adr.sin_port) << std::endl;
 					EV_SET(&server.chagelist, clnt_sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-					EV_SET(&server.chagelist, clnt_sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+					// EV_SET(&server.chagelist, clnt_sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 					if (kevent(this->kq, &server.chagelist, 1, NULL, 0, NULL) == -1)
 						occurException("kevent()", SERVER);
-				} else {
-					char req_line[BUF_SIZE];
-					ssize_t str_len = read(sockfd, req_line, BUF_SIZE);
-					if (str_len == 0)
-					{
-						close(sockfd);
-						continue ;
-					}
-
-					std::string method, file_name;
-					std::stringstream req_msg(req_line);
-					send_data(sockfd, server, req_line);
-					// send_data(sockfd, findRoot(server, file_name));
-					close(sockfd);
+					acpt = true;
 				}
+			}
+			if (!acpt) {
+				char req_line[BUF_SIZE];
+				ssize_t str_len = read(sockfd, req_line, BUF_SIZE);
+				if (str_len == 0) {
+					close(sockfd);
+					continue ;
+				}
+
+				std::stringstream req_msg(req_line);
+				std::stringstream ss(req_line);
+				std::getline(ss, tmp);
+				std::getline(ss, tmp);
+				std::cout << "tmp : ";
+				std::cout << tmp << std::endl;
+				send_data(sockfd, server, req_line);
+				// send_data(sockfd, findRoot(server, file_name));
+				close(sockfd);
 			}
 		}
 	}
-
 	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
 		close(it->second.serv_sock);
 }
