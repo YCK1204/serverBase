@@ -1,5 +1,7 @@
 #include "../header/Http.hpp"
 
+volatile sig_atomic_t flag = 0;
+
 Http::Http() {}
 Http::Http(const std::string &path)
 {
@@ -446,6 +448,7 @@ int Http::ft_stoi(const std::string &str)
 
 void    Http::SettingHttp()
 {
+	int	reuse = 1;
 	if ((this->kq = kqueue()) == -1)
 		occurException("kqueue()", HTTP);
 	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
@@ -458,6 +461,7 @@ void    Http::SettingHttp()
 		server.serv_adr.sin_family = AF_INET;
 		server.serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
 		server.serv_adr.sin_port = htons(server.port);
+		setsockopt(server.serv_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 		if (bind(server.serv_sock, (struct sockaddr *)&server.serv_adr, sizeof(server.serv_adr)))
 			occurException("bind()", HTTP);
 		if (listen(server.serv_sock, LISTEN_SIZE))
@@ -468,6 +472,11 @@ void    Http::SettingHttp()
 	}
 }
 
+void	handle_signal(int signum)
+{
+	signum = 1;
+}
+
 void    Http::runServer()
 {
 	int	clnt_sock, nevents, sockfd;
@@ -475,7 +484,7 @@ void    Http::runServer()
 	socklen_t clnt_adr_size;
 	struct kevent evlist[MAX_EVENTS];
 
-	while (true)
+	while (!flag)
 	{
 		if ((nevents = kevent(this->kq, NULL, 0, evlist, MAX_EVENTS, NULL)) == -1)
 			occurException("kevent()", SERVER);
