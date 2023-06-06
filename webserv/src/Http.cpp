@@ -130,7 +130,7 @@ std::string	Http::findRoot(ServerBlock &server, std::string file_name) {
 }
 
 void    Http::send_data(int clnt_sock, std::string file_name) {
-	char protocol[]="HTTP/1.0 200 OK\r\n";
+	char protocol[]="HTTP/1.1 200 OK\r\n";
     char server[]="Server:Linux Web Server \r\n";
     char cnt_len[]="Content-length:2048\r\n";
 	const char *type;
@@ -153,10 +153,13 @@ void    Http::send_data(int clnt_sock, std::string file_name) {
     write(clnt_sock, server, strlen(server));
     write(clnt_sock, cnt_len, strlen(cnt_len));
     write(clnt_sock, type, std::strlen(type));
+	std::cout << "this" << std::endl;
 	while (std::getline(file, tmp)) {
 		tmp += '\n';
 		const char *msg = tmp.c_str();
+		std::cout << tmp << std::endl;
 		write(clnt_sock, msg, std::strlen(msg));
 	}
+	std::cout << "this" << std::endl;
 	file.close();
 }

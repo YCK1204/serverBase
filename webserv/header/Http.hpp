@@ -113,54 +113,51 @@ private:
     void        checkOverlapLocationRoot(const std::string &root, ServerBlock &server);
     void	    checkValidAddr(const std::string &host);
     void        occurException(const std::string &msg, exception type);
+    
+    std::string	findRoot(ServerBlock &server, std::string file_name);
     void        runServer();
     void        send_data(int clnt_sock, std::string file_name);
     void        SettingHttp();
     void        send_error(int clnt_sock);
-    std::string	findRoot(ServerBlock &server, std::string file_name);
+
+    std::vector<std::pair<std::string, std::string> >   makeResponse(ServerBlock &server, std::stringstream &ss);
+    std::string                                         checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, ServerBlock &server, std::vector<std::pair<std::string, LocationBlock> >::iterator it);
+    std::string                                         setResponseLine(LocationBlock &location, size_t const &ResponseCode);
 
     void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
-    std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
     void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);
+    std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
     std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config, std::string &default_root);
 
-    class   NotValidConfigFileException : public std::exception
-    {
+    class   NotValidConfigFileException : public std::exception{
         public:
             const char *what() const throw();
     };
-    class NoSuchFileException : public std::exception
-    {
+    class NoSuchFileException : public std::exception{
         public:
             const char *what() const throw();
     };
-    class EmptyFileException :  public std::exception
-    {
+    class EmptyFileException :  public std::exception{
         public:
             const char *what() const throw();
     };
-    class ServerPortOverlapException :  public std::exception
-    {
+    class ServerPortOverlapException :  public std::exception{
         public:
             const char *what() const throw();
     };
-    class LocationRootOverlapException :  public std::exception
-    {
+    class LocationRootOverlapException :  public std::exception{
         public:
             const char *what() const throw();
     };
-    class notValidAddrException :  public std::exception
-    {
+    class notValidAddrException :  public std::exception{
         public:
             const char *what() const throw();
     };
-    class SettingHttpException :  public std::exception
-    {
+    class SettingHttpException :  public std::exception{
         public:
             const char *what() const throw();
     };
-    class RunServerException :  public std::exception
-    {
+    class RunServerException :  public std::exception{
         public:
             const char *what() const throw();
     };
