@@ -19,8 +19,7 @@ void    Http::SettingHttp()
 	int	reuse = 1;
 	if ((this->kq = kqueue()) == -1)
 		occurException("kqueue()", HTTP);
-	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
-	{
+	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
 		ServerBlock &server = it->second;
 
 		if ((server.serv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -47,18 +46,14 @@ void    Http::runServer()
 	socklen_t clnt_adr_size;
 	struct kevent evlist[MAX_EVENTS];
 
-	while (!flag)
-	{
+	while (!flag) {
 		if ((nevents = kevent(this->kq, NULL, 0, evlist, MAX_EVENTS, NULL)) == -1)
 			occurException("kevent()", SERVER);
-		for (int i = 0; i < nevents; i++)
-		{
+		for (int i = 0; i < nevents; i++) {
 			sockfd = evlist[i].ident;
-			for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
-			{
+			for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
 				ServerBlock &server = it->second;
-				if (sockfd == server.serv_sock)
-				{
+				if (sockfd == server.serv_sock) {
 					clnt_adr_size = sizeof(clnt_adr);
 					if ((clnt_sock = accept(sockfd, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1)
 						occurException("accept()", SERVER);
@@ -67,9 +62,7 @@ void    Http::runServer()
 					EV_SET(&server.chagelist, clnt_sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 					if (kevent(this->kq, &server.chagelist, 1, NULL, 0, NULL) == -1)
 						occurException("kevent()", SERVER);
-				}
-				else
-				{
+				} else {
 					char req_line[BUF_SIZE];
 					ssize_t str_len = read(sockfd, req_line, BUF_SIZE);
 					if (str_len == 0)
@@ -82,10 +75,8 @@ void    Http::runServer()
 					std::stringstream req_msg(req_line);
 					std::stringstream tmp(req_line);
 					std::string line;
-					while (std::getline(tmp, line))
-					{
+					while (std::getline(tmp, line)) 
 						std::cout << "line : " << line << std::endl;
-					}
 					req_msg >> method >> file_name;
 					std::cout << "req line" << req_line << std::endl;
 
@@ -97,8 +88,7 @@ void    Http::runServer()
 					std::cout << "ver" << method << std::endl;
 					req_msg >> method;
 					std::cout << "HTTP" << method << std::endl;
-					if (method.compare("GET"))
-					{
+					if (method.compare("GET")) {
 						// send_error(sockfd)
 						// close(sockfd);
 						continue ;
@@ -114,8 +104,7 @@ void    Http::runServer()
 		close(it->second.serv_sock);
 }
 
-void Http::send_error(int clnt_sock)
-{   
+void Http::send_error(int clnt_sock) { 
     char protocol[]="HTTP/1.1 400 Bad Request\r\n";
     char server[]="Server:Linux Web Server \r\n";
     char cnt_len[]="Content-length:2048\r\n";
@@ -131,10 +120,8 @@ void Http::send_error(int clnt_sock)
     write(clnt_sock, content, strlen(content));
 }
 
-std::string	Http::findRoot(ServerBlock &server, std::string file_name)
-{
-	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
-	{
+std::string	Http::findRoot(ServerBlock &server, std::string file_name) {
+	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++) {
 		std::cout << "location root : " << it->second.default_root << ", file_name : " << file_name << std::endl;
 		if (!it->second.default_root.compare(file_name))
 			return (it->second.index_root);
@@ -142,8 +129,7 @@ std::string	Http::findRoot(ServerBlock &server, std::string file_name)
 	return ("");
 }
 
-void    Http::send_data(int clnt_sock, std::string file_name)
-{
+void    Http::send_data(int clnt_sock, std::string file_name) {
 	char protocol[]="HTTP/1.0 200 OK\r\n";
     char server[]="Server:Linux Web Server \r\n";
     char cnt_len[]="Content-length:2048\r\n";
@@ -156,8 +142,7 @@ void    Http::send_data(int clnt_sock, std::string file_name)
 
 	std::cout << "파일 네임 : " + file_name << std::endl;
 	file.open(file_name.c_str());
-    if(!file.is_open())
-    {
+    if(!file.is_open()) {
 		std::cout << "에러 발생 !!!!!!!!!!!!!! " << std::endl;
         send_error(clnt_sock);
         return;
@@ -168,8 +153,7 @@ void    Http::send_data(int clnt_sock, std::string file_name)
     write(clnt_sock, server, strlen(server));
     write(clnt_sock, cnt_len, strlen(cnt_len));
     write(clnt_sock, type, std::strlen(type));
-	while (std::getline(file, tmp))
-	{
+	while (std::getline(file, tmp)) {
 		tmp += '\n';
 		const char *msg = tmp.c_str();
 		write(clnt_sock, msg, std::strlen(msg));

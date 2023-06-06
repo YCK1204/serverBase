@@ -1,11 +1,8 @@
 #include "../header/Http.hpp"
 
-void	Http::printConfigInfo()
-{
-	try
-	{
-		for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator itt = this->server_block.begin(); itt != this->server_block.end(); itt++)
-		{
+void	Http::printConfigInfo() {
+	try {
+		for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator itt = this->server_block.begin(); itt != this->server_block.end(); itt++) {
 			ServerBlock server = itt->second;
 			std::cout << "server {" << std::endl;
 			std::cout << "    listen " << server.port << std::endl;
@@ -22,17 +19,14 @@ void	Http::printConfigInfo()
 			if (!server.index_root.empty())
 				std::cout << "    index_root " << server.index_root << std::endl;
 			std::cout << "    host " << server.host << std::endl;
-			for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
-			{
+			for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++) {
 				LocationBlock location = it->second;
 				
 				std::cout << std::endl;
 				std::cout << "    location " + location.default_root + " {" << std::endl;
 				std::cout << "        allow_methods ";
-				for (int i = 0; i < 3; i++)
-				{
-					if (location.methods[i])
-					{
+				for (int i = 0; i < 3; i++) {
+					if (location.methods[i]) {
 						if (i == GET)
 							std::cout << "GET ";
 						else if (i == POST)
@@ -57,19 +51,15 @@ void	Http::printConfigInfo()
 			}
 			std::cout << "}\n" << std::endl;
 		}
-	}
-	catch (std::exception &e)
-	{
+	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
 }
 
-int Http::ft_stoi(const std::string &str)
-{
+int Http::ft_stoi(const std::string &str) {
     int ret = 0;
 
-    for (int i = 0; str[i]; i++)
-    {
+    for (int i = 0; str[i]; i++) {
         if (!('0' <= str[i] && str[i] <= '9') || ret < 0)
 			occurException(str, CONFIG);
 		ret *= 10;
@@ -78,8 +68,7 @@ int Http::ft_stoi(const std::string &str)
 	return (ret);
 }
 
-std::string Http::ft_inet_ntoa(uint32_t ipaddr)
-{
+std::string Http::ft_inet_ntoa(uint32_t ipaddr) {
     uint32_t netaddr = htonl(ipaddr);
 
     std::ostringstream oss;
@@ -91,7 +80,4 @@ std::string Http::ft_inet_ntoa(uint32_t ipaddr)
     return oss.str();
 }
 
-uint16_t    Http::ft_ntohs(uint16_t port)
-{
-	return (((port & 0xFF00) >> 8) | ((port & 0x00FF) << 8));
-}
+uint16_t    Http::ft_ntohs(uint16_t port) { return (((port & 0xFF00) >> 8) | ((port & 0x00FF) << 8)); }
