@@ -81,3 +81,57 @@ std::string Http::ft_inet_ntoa(uint32_t ipaddr) {
 }
 
 uint16_t    Http::ft_ntohs(uint16_t port) { return (((port & 0xFF00) >> 8) | ((port & 0x00FF) << 8)); }
+
+bool	Http::ExistFile(std::string &root) {
+	std::ifstream file;
+
+	file.open(root);
+	return (file.is_open());
+}
+
+void    Http::recursive_to_string(int n, std::string &ret) {
+    if (n >= 10) {
+		recursive_to_string(n / 10, ret);
+		ret += (n % 10) + '0';
+	}
+    else
+	    ret += n + '0';
+}
+
+std::string Http::ft_to_string(int n) {
+	std::string ret;
+
+	if (n == -2147483648)
+		return "-2147483648";
+	if (n < 0) {
+		n *= -1;
+		ret += '-';
+	}
+	recursive_to_string(n, ret);
+    return ret;
+}
+
+std::vector<std::pair<unsigned short, ServerBlock> >::iterator Http::getServer(const unsigned short &port) {
+
+	std::vector<std::pair<unsigned short, ServerBlock> >::iterator it;
+	for (it = this->server_block.begin(); it != this->server_block.end() && it->second.port != port; it++);
+	return (it);
+}
+
+std::string Http::makeHtml(const std::string msg) {
+	std::string ret;
+
+	ret += "<!DOCTYPE html>\n"
+               "<html>\n"
+               "<head>\n"
+               "    <meta charset=\"UTF-8\">\n"
+               "    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=chrome\">\n"
+               "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+               "    <title>Document</title>\n"
+               "</head>\n"
+               "<body>\n";
+	ret += "    " + msg;
+	ret += "</body>\n"
+           "</html>";
+	return ret;
+}

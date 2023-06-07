@@ -5,7 +5,7 @@ SRCS = $(wildcard ./src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 
 %.o : %.c
-	$(CPP) $(FLAGS) -c $^ -o $@
+	$(CPP) $(FLAGS) -o $@
 
 $(NAME) : $(OBJS)
 	$(CPP) $(FLAGS) -o $@ $^

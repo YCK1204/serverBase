@@ -1,13 +1,11 @@
 #include "../header/Http.hpp"
 
-void	Http::checkValidAddr(const std::string &host)
-{
+void	Http::checkValidAddr(const std::string &host) {
 	size_t	len;
 	size_t	temp = 0;
 	int		cnt = 0;
 
-	for (; (len = host.find(".", temp)) != std::string::npos;)
-	{
+	for (; (len = host.find(".", temp)) != std::string::npos;) {
 		cnt++;
 		if (ft_stoi(host.substr(temp, len - temp)) > 255)
 			occurException(host, ADDR);
@@ -17,12 +15,10 @@ void	Http::checkValidAddr(const std::string &host)
 		occurException(host, ADDR);
 }
 
-void    Http::checkOverlapLocationRoot(const std::string &root, ServerBlock &server)
-{
+void    Http::checkOverlapLocationRoot(const std::string &root, ServerBlock &server) {
 	int	cnt = 0;
 
-	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++)
-	{
+	for (std::vector<std::pair<std::string, LocationBlock> >::iterator it = server.location_block.begin(); it != server.location_block.end(); it++) {
 		if (!it->first.compare(root))
 			cnt++;
 		if (cnt >= 2)
@@ -34,11 +30,9 @@ void    Http::checkExistFile()
 {
 	std::ifstream	tmp;
 
-	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
-	{
+	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
 		ServerBlock	&server = it->second;
-		if (!server.root.empty())
-		{
+		if (!server.root.empty()) {
 			if (server.index.empty())
 				occurException(server.root, FILEROOT);
 			tmp.open((server.root + server.index.substr(1)).c_str());
@@ -54,12 +48,9 @@ void    Http::checkExistFile()
 		tmp.close();
 		tmp.clear();
 		server.error_page = (server.root + server.error_page.substr(1));
-		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = server.location_block.begin(); itt != server.location_block.end(); itt++)
-		{
+		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = server.location_block.begin(); itt != server.location_block.end(); itt++) {
 			LocationBlock	&location = itt->second;
-
-			if (!location.root.empty())
-			{
+			if (!location.root.empty()) {
 				if (location.index.empty())
 					occurException(location.root, FILEROOT);
 				tmp.open((location.root + location.index.substr(1)).c_str());
@@ -79,12 +70,10 @@ void    Http::checkOverlapServerPort(const unsigned short &port)
 {
 	int	cnt = 0;
 
-	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++)
-	{
+	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
 		if (it->first == port)
 			cnt++;
-		if (cnt >= 2)
-		{
+		if (cnt >= 2) {
 			std::stringstream a(port);
 			std::string tmp;
 			a >> tmp;
@@ -93,12 +82,10 @@ void    Http::checkOverlapServerPort(const unsigned short &port)
 	}
 }
 
-void	Http::checkValidConfig()
-{
+void	Http::checkValidConfig() {
 	std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin();
 	
-	for (; it != this->server_block.end(); it++)
-	{
+	for (; it != this->server_block.end(); it++) {
 		checkOverlapServerPort(it->first);
 		checkValidAddr(it->second.host);
 		for (std::vector<std::pair<std::string, LocationBlock> >::iterator itt = it->second.location_block.begin(); itt != it->second.location_block.end(); itt++)
@@ -106,8 +93,7 @@ void	Http::checkValidConfig()
 	}
 }
 
-void	Http::server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret)
-{
+void	Http::server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret) {
 	std::string tmp, temp;
 	int			val;
 
@@ -132,16 +118,13 @@ void	Http::server_block_argu_split(std::stringstream &ss, s_block_type t, Server
 		ret.host = tmp;
 }
 
-void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret)
-{
+void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret) {
 	std::string tmp, temp;
 
-	if (t == METHOD)
-	{
+	if (t == METHOD) {
 		for (int i = 0; i < 3; i++)
 			ret.methods[i] = false;
-		while (1)
-		{
+		while (1) {
 			tmp.clear();
 			ss >> tmp;
 			if (tmp.empty())
@@ -155,14 +138,11 @@ void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, Loca
 			else
 				occurException(tmp, CONFIG);
 		}
-	}
-	else
-	{
+	} else {
 		ss >> tmp >> temp;
 		if (temp.length())
 			occurException(tmp + temp, CONFIG);
-		if (t == AUTOINDEX)
-		{
+		if (t == AUTOINDEX) {
 			if (!tmp.compare("on"))
 				ret.autoindex = true;
 			else if (!tmp.compare("off"))
@@ -174,8 +154,7 @@ void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, Loca
 			ret.root = tmp;
 		else if (t == L_INDEX)
 			ret.index = tmp;
-		else if (t == RETURN)
-		{
+		else if (t == RETURN) {
 			ret.ret = true;
 			ret.redirect = tmp;
 		}
@@ -184,8 +163,7 @@ void	Http::location_block_argu_split(std::stringstream &ss, l_block_type t, Loca
 	}
 }
 
-std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &config, std::string &default_root)
-{
+std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &config, std::string &default_root) {
 	LocationBlock	ret;
 	std::string line, cmd, temp;
 	int			cnt[6] = {};
@@ -194,8 +172,7 @@ std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &
 		ret.methods[i] = true;
 	ret.default_root = default_root;
 	ret.ret = false;
-	while (1)
-	{
+	while (1) {
 		line.clear();
 		cmd.clear();
 		temp.clear();
@@ -206,8 +183,7 @@ std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &
 			continue ;
 		std::stringstream	ss(line);
 		ss >> cmd;
-		if (!cmd.compare("}"))
-		{
+		if (!cmd.compare("}")) {
 			ss >> temp;
 			if (temp.length())
 				occurException(cmd + temp, CONFIG);
@@ -228,10 +204,8 @@ std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &
 		else
 			occurException(cmd, CONFIG);
 	}
-	for (int i = 0; i < 6; i++)
-	{
-		if (cnt[i] >= 2)
-		{
+	for (int i = 0; i < 6; i++) {
+		if (cnt[i] >= 2) {
 			std::cerr << "overlap location block option" << std::endl;
 			throw	NotValidConfigFileException();
 		}
@@ -239,17 +213,15 @@ std::pair<std::string, LocationBlock>	Http::location_block_split(std::ifstream &
 	return (std::make_pair(ret.default_root, ret));
 }
 
-std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
-{
+std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config) {
 	ServerBlock	ret;
 	std::string	line, cmd, temp, tmp, tt;
 	int			CloseBraceCnt = 0;
 	int			cnt[7] = {};
 
 	ret.client_body_size = 0;
-	ret.port = 80;
-	while (1)
-	{
+	ret.port = 8080;
+	while (1) {
 		line.clear();
 		cmd.clear();
 		temp.clear();
@@ -260,8 +232,7 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 			continue ;
 		std::stringstream	ss(line);
 		ss >> cmd;
-		if (!cmd.compare("}") && ++CloseBraceCnt)
-		{
+		if (!cmd.compare("}") && ++CloseBraceCnt) {
 			ss >> temp;
 			if (temp.length())
 				occurException(cmd + temp, CONFIG);
@@ -281,8 +252,7 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 			server_block_argu_split(ss, S_ROOT, ret);
 		else if (!cmd.compare("server_name") && ++cnt[SERVER_NAME])
 			server_block_argu_split(ss, SERVER_NAME, ret);
-		else if (!cmd.compare("location"))
-		{
+		else if (!cmd.compare("location")) {
 			ss >> temp >> tmp >> tt;
 			if (tmp.compare("{"))
 				occurException(tmp, CONFIG);
@@ -301,16 +271,14 @@ std::pair<unsigned short, ServerBlock>	Http::Server_split(std::ifstream &config)
 	return (std::make_pair(ret.port, ret));
 }
 
-void    Http::ParsingConfig(const std::string &path)
-{
+void    Http::ParsingConfig(const std::string &path) {
 	std::ifstream	config;
 	std::string		line, cmd, temp, tmp;
 
 	config.open(path.c_str());
 	if (!config.is_open())
 		throw	NoSuchFileException();
-	while (1)
-	{
+	while (1) {
 		line.clear();
 		getline(config, line);
 		if (config.eof())
@@ -319,8 +287,7 @@ void    Http::ParsingConfig(const std::string &path)
 			continue ;
 		std::stringstream ss(line);
 		ss >> cmd;
-		if (!cmd.compare("server"))
-		{
+		if (!cmd.compare("server")) {
 			ss >> temp >> tmp;
 			if (temp.compare("{") || tmp.length())
 				throw	NotValidConfigFileException();

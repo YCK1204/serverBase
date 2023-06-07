@@ -9,6 +9,7 @@ Http::Http(const std::string &path)
 	checkValidConfig();
 	checkExistFile();
 	SettingHttp();
+	printConfigInfo();
 	runServer();
 }
 Http::~Http() {}
@@ -60,28 +61,23 @@ void    Http::runServer()
 					if ((clnt_sock = accept(sockfd, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1)
 						occurException("accept()", SERVER);
 					EV_SET(&server.chagelist, clnt_sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-					// EV_SET(&server.chagelist, clnt_sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+					EV_SET(&server.chagelist, clnt_sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 					if (kevent(this->kq, &server.chagelist, 1, NULL, 0, NULL) == -1)
 						occurException("kevent()", SERVER);
 					acpt = true;
 				}
-			}
-			if (!acpt) {
+			} if (!acpt) {
 				char req_line[BUF_SIZE];
 				ssize_t str_len = read(sockfd, req_line, BUF_SIZE);
 				if (str_len == 0) {
 					close(sockfd);
 					continue ;
 				}
-
-				std::stringstream req_msg(req_line);
 				std::stringstream ss(req_line);
 				std::getline(ss, tmp);
 				std::getline(ss, tmp);
-				std::cout << "tmp : ";
-				std::cout << tmp << std::endl;
-				send_data(sockfd, server, req_line);
-				// send_data(sockfd, findRoot(server, file_name));
+				std::cout << req_line << std::endl;
+				send_data(sockfd, req_line, tmp);
 				close(sockfd);
 			}
 		}
@@ -90,13 +86,19 @@ void    Http::runServer()
 		close(it->second.serv_sock);
 }
 
-void	Http::send_data(int clnt_sock, ServerBlock &server, char *msg) {
+void	Http::send_data(int clnt_sock, char *msg, std::string &host) {
 	const char	*ResponseMsg;
 	const char	*file;
-	
-	std::pair<std::string, std::string>	data = makeResponse(server, msg);
-	ResponseMsg = data.first.c_str();
+	std::string tmp;
+	std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = getServer(static_cast<unsigned short>(std::atoi(host.substr(host.rfind(":") + 1).c_str())));
+
+	std::pair<std::string, std::string>	data = makeResponse(it, msg);
+	tmp = data.first;
 	file = data.second.c_str();
+	tmp += "Content-length:" + ft_to_string(std::strlen(file)) + "\r\n\r\n";
+	ResponseMsg = tmp.c_str();
+	std::cout << "first : " << ResponseMsg << std::endl;
+	std::cout << "second : " << file << std::endl;
 	write(clnt_sock, ResponseMsg, std::strlen(ResponseMsg));
 	write(clnt_sock, file, std::strlen(file));
 }
