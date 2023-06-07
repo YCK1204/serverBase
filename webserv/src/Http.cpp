@@ -77,7 +77,7 @@ void    Http::runServer()
 				std::getline(ss, tmp);
 				std::getline(ss, tmp);
 				std::cout << req_line << std::endl;
-				send_data(sockfd, req_line, tmp);
+				send_data(sockfd, req_line, tmp, str_len);
 				close(sockfd);
 			}
 		}
@@ -86,19 +86,25 @@ void    Http::runServer()
 		close(it->second.serv_sock);
 }
 
-void	Http::send_data(int clnt_sock, char *msg, std::string &host) {
+void	Http::send_data(int clnt_sock, char *msg, std::string &host, ssize_t &str_len) {
 	const char	*ResponseMsg;
 	const char	*file;
 	std::string tmp;
+	std::pair<std::string, std::string>	data;
 	std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = getServer(static_cast<unsigned short>(std::atoi(host.substr(host.rfind(":") + 1).c_str())));
 
-	std::pair<std::string, std::string>	data = makeResponse(it, msg);
-	tmp = data.first;
+	if (it != this->server_block.end() && str_len > it->second.client_body_size) {
+		std::vector<std::pair<std::string, LocationBlock> >::iterator temp = it->second.location_block.begin();
+		data.first = setResponseLine(temp, it,
+			413, "Payload Too Large"
+		);
+		data.second = makeHtml("<h1> 413이죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
+	} else {
+		data = makeResponse(it, msg);
+	}
 	file = data.second.c_str();
-	tmp += "Content-length:" + ft_to_string(std::strlen(file)) + "\r\n\r\n";
-	ResponseMsg = tmp.c_str();
-	std::cout << "first : " << ResponseMsg << std::endl;
-	std::cout << "second : " << file << std::endl;
+	data.first += "Content-length:" + ft_to_string(std::strlen(file)) + "\r\n\r\n";
+	ResponseMsg = data.first.c_str();
 	write(clnt_sock, ResponseMsg, std::strlen(ResponseMsg));
 	write(clnt_sock, file, std::strlen(file));
 }

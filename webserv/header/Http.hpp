@@ -123,7 +123,7 @@ private:
     
     /* server_functions */
     void                                    runServer();
-    void	                                send_data(int clnt_sock, char *msg, std::string &host);
+    void	                                send_data(int clnt_sock, char *msg, std::string &host, ssize_t &str_len);
     void                                    SettingHttp();
     /* server_functions */
 
