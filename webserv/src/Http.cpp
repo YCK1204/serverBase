@@ -98,7 +98,7 @@ void	Http::send_data(int clnt_sock, char *msg, std::string &host, ssize_t &str_l
 		data.first = setResponseLine(temp, it,
 			413, "Payload Too Large"
 		);
-		data.second = makeHtml("<h1> 413이죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
+		data.second = makeHtml("<h1> 413에러났죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
 	} else {
 		data = makeResponse(it, msg);
 	}

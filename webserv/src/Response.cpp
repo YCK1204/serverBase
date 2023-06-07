@@ -70,13 +70,9 @@ std::string Http::checkValidRequestLine(std::string &method, std::string &root, 
         );
     // autoindex 인데 없는 디렉토리이거나 파일이 지워져서 없을 때
     else if ((itt->second.autoindex) && !opendir((it->second.root + itt->second.default_root.substr(1)).c_str()) || !ExistFile(itt->second.index_root))
-    {
-        std::cout << it->second.root + itt->second.default_root.substr(1) << std::endl;
-        std::cout << itt->second.index_root << std::endl;
         return setResponseLine(itt, it, 
             404, "Not Found"
         );
-    }
     // 리다이렉트
     else if (itt->second.ret)
         return setResponseLine(itt, it, 
@@ -128,7 +124,7 @@ std::string Http::readFile(std::vector<std::pair<unsigned short, ServerBlock> >:
     int code = 0;
 
     if (it == this->server_block.end())
-        return makeHtml("<h1> 403이죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
+        return makeHtml("<h1> 403에러났죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
     if (itt != it->second.location_block.end()) {
         if (msg.find("200", 5) != std::string::npos)
             code = 200;
@@ -141,7 +137,7 @@ std::string Http::readFile(std::vector<std::pair<unsigned short, ServerBlock> >:
                 else {
                     file.open(it->second.error_page);
                     if (!file.is_open())
-                        ret = makeHtml("<h1> 404이죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
+                        ret = makeHtml("<h1> 404에러났죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
                 }
                 if (file.is_open())
                 {
@@ -154,7 +150,7 @@ std::string Http::readFile(std::vector<std::pair<unsigned short, ServerBlock> >:
             }
         }
     } else {
-        ret = makeHtml("<h1>" + msg.substr(9, 3) + "이죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
+        ret = makeHtml("<h1>" + msg.substr(9, 3) + "에러났죠? ㅋㅋ <br>그렇게 하는거 아닌데 ㅋ</h1>\n");
     }
     return ret;
 }
