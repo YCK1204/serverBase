@@ -1,8 +1,12 @@
 #include "../header/Http.hpp"
 
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
+	clients[clnt_sock].host = 80;
     clients[clnt_sock].str_len = 0;
+	clients[clnt_sock].root = "";
+	clients[clnt_sock].method = "";
     clients[clnt_sock].request = "";
+	clients[clnt_sock].http_ver = "";
     clients[clnt_sock].clnt_adr = clnt_adr;
     clients[clnt_sock].last_active_times = std::time(NULL);
 	std::cout << "client connected : " << clnt_sock << " [" << ft_ntohs(clients[clnt_sock].clnt_adr.sin_port) << "]" << std::endl;
@@ -38,7 +42,7 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
 
 	clnt_adr_size = sizeof(clnt_adr);
 	if ((clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1) {
-        occurException(40, "accept()", HTTP, CLIENT,
+        occurException(44, "accept()", HTTP, CLIENT,
         "accept function error");
     }
     clientInit(clnt_adr, clnt_sock);
@@ -64,7 +68,18 @@ void	Http::readRequestMsg(int clnt_sock) {
 }
 
 void	Http::writeResponse(int clnt_sock) {
+	std::pair<std::string, std::string>	response;
 
+	err = 0;
+	response.first = getMsg(clnt_sock);
+	response.second = getContent(clnt_sock);
+	if (err)
+		response.first = buildErrorMsg(clnt_sock);
+	if ((write(clnt_sock, response.first.c_str(), response.first.length())) == -1)
+		std::cerr << "Error : write error (response msg)" << std::endl;
+	if ((write(clnt_sock, response.second.c_str(), response.second.length())) == -1)
+		std::cerr << "Error : write error (response content)" << std::endl;
+	close(clnt_sock);
 }
 
 void	Http::clientHandler() {

@@ -105,7 +105,11 @@ typedef struct {
 }	ServerBlock;
 
 typedef struct {
+    int                                         host;
+    std::string                                 root;
+    std::string                                 method;
     std::string                                 request;
+    std::string                                 http_ver;
     struct sockaddr_in                          clnt_adr;
     ssize_t                                     str_len;
     std::time_t                                 last_active_times;
@@ -115,7 +119,7 @@ class Http {
 private:
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         kq, clnt_sock, nevents;
+    int                                         kq, clnt_sock, nevents, err;
 	struct kevent                               evlist[MAX_EVENTS];
 	struct kevent                               *curr_event;
     Mime                                        mime;
@@ -180,10 +184,17 @@ private:
     void	                                    eventReadHandler(int serv_sock, int clnt_sock, ServerBlock &server);
     /* client_functions*/
 
-    /* response_functions */
+    /* html_functions*/
     std::string                                 buildHtml(const std::string msg);
     std::string                                 buildErrorHtml(const int status);
-    
+    /* html_functions*/
+
+    /* response_functions */
+    std::string                                 &getMsg(int clnt_sock);
+    std::string                                 &getContent(int clnt_sock);
+    std::string                                 &buildErrorMsg(int clnt_sock);
+
+
     std::string                                 makeAutoindex(std::string root);
     std::pair<std::string, std::string>         makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);
     std::string                                 readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg);
