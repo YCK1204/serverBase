@@ -129,28 +129,3 @@ std::string Http::ft_to_string(int n) {
 	recursive_to_string(n, ret);
     return ret;
 }
-
-std::vector<ServerBlock>::iterator Http::getServer(const unsigned short &port) {
-
-	std::vector<ServerBlock>::iterator it;
-	for (it = this->server.begin(); it != this->server.end() && it->port != port; it++);
-	return (it);
-}
-
-std::string Http::makeHtml(const std::string msg) {
-	std::string ret;
-
-	ret += "<!DOCTYPE html>\n"
-               "<html>\n"
-               "<head>\n"
-               "    <meta charset=\"UTF-8\">\n"
-               "    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=chrome\">\n"
-               "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-               "    <title>Document</title>\n"
-               "</head>\n"
-               "<body>\n";
-	ret += "    " + msg;
-	ret += "</body>\n"
-           "</html>";
-	return ret;
-}

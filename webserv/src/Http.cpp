@@ -47,37 +47,10 @@ void    Http::runServer()
 		if ((nevents = kevent(this->kq, NULL, 0, evlist, MAX_EVENTS, NULL)) == -1)
 			serverFunctionExecuteFailed(47, "kevent()");
 
-		clientHandler();
 		signal(SIGINT, handle_signal);
+		clientHandler();
 	}
 	
 	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++)
 		close(it->serv_sock);
-}
-
-void	Http::clientHandler() {
-	ServerBlock			server;
-	
-	for (int i = 0; i < nevents; i++) {
-		curr_event = &evlist[i];
-		sockfd = evlist[i].ident;
-		for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
-			server = *it;
-			if (curr_event->flags & EV_ERROR)
-				eventErrHandler(server.serv_sock, curr_event->ident);
-			else if (curr_event->filter == EVFILT_READ)
-				eventReadHandler(server.serv_sock, clnt_sock, server);
-			else if (curr_event->filter == EVFILT_WRITE)
-				writeResponse(curr_event->ident);
-			server = *it;
-			if (sockfd == server.serv_sock) {
-				clnt_adr_size = sizeof(clnt_adr);
-				if ((clnt_sock = accept(sockfd, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1)
-					serverFunctionExecuteFailed(59, "kevent()");
-				EV_SET(&server.chagelist, clnt_sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-				if (kevent(this->kq, &server.chagelist, 1, NULL, 0, NULL) == -1)
-					serverFunctionExecuteFailed(63, "kevent()");
-			}
-		}
-	}
 }

@@ -25,6 +25,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "../header/Mime.hpp"
+
 #define LISTEN_SIZE 20
 #define BUF_SIZE 2048
 #define MAX_EVENTS 100
@@ -104,21 +106,20 @@ typedef struct {
 }	ServerBlock;
 
 typedef struct {
-    std::string     request;
-    std::time_t     last_active_times;
-    unsigned short  port;
-    ssize_t    str_len;
+    std::string         request;
+    std::time_t         last_active_times;
+    struct sockaddr_in  clnt_adr;
+    ssize_t             str_len;
 }   ClientData;
 
 class Http {
 private:
-    std::vector<ServerBlock>   server;
-    std::map<int, ClientData>  clients;
-    int kq, clnt_sock, sockfd, nevents;
-    ssize_t                    str_len;
-    std::string                tmp;
-	struct kevent              evlist[MAX_EVENTS];
-	struct kevent              *curr_event;
+    std::vector<ServerBlock>    server;
+    std::map<int, ClientData>   clients;
+    int                         kq, clnt_sock, nevents;
+	struct kevent               evlist[MAX_EVENTS];
+	struct kevent               *curr_event;
+    Mime                        mime;
 
     Http();
     Http &operator = (const Http &s);
@@ -155,7 +156,6 @@ private:
     bool	                                                        ExistDirectory(std::string &root);
     std::string                                                     ft_to_string(int n);
     void                                                            recursive_to_string(int n, std::string &ret);
-    std::vector<ServerBlock>::iterator                              getServer(const unsigned short &port);
     void	                                                        exception_util(const std::string &str, s_block_type type);
     /* util_functions */
 
@@ -172,11 +172,13 @@ private:
     /* server_functions */
 
     /* client_functions*/
-    void                                                            clientInit(uint16_t port, int clnt_sock);
+    void                                                            clientInit(struct sockaddr_in clnt_adr, int clnt_sock);
     /* client_functions*/
 
     /* response_functions */
-    std::string                                                     makeHtml(const std::string msg);
+    std::string                                                     buildHtml(const std::string msg);
+    std::string                                                     buildErrorHtml(const int status);
+
     std::string                                                     makeAutoindex(std::string root);
     std::pair<std::string, std::string>                             makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);
     std::string                                                     readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg);
