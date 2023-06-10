@@ -6,11 +6,10 @@ Http::Http() {}
 Http::Http(const std::string &path)
 {
 	ParsingConfig(path);
-	checkValidConfig();
-	checkExistFile();
-	SettingHttp();
 	printConfigInfo();
-	runServer();
+	checkValidConfig();
+	SettingHttp();
+	//runServer();
 }
 Http::~Http() {}
 
@@ -18,27 +17,28 @@ void    Http::SettingHttp()
 {
 	int	reuse = 1;
 	if ((this->kq = kqueue()) == -1)
-		occurException("kqueue()", HTTP);
-	for (std::vector<std::pair<unsigned short, ServerBlock> >::iterator it = this->server_block.begin(); it != this->server_block.end(); it++) {
-		ServerBlock &server = it->second;
+		serverFunctionExecuteFailed(19, "kqueue()");
+	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
+		ServerBlock &server = *it;
 
-		if ((server.serv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-			occurException("socket()", HTTP);
+		if ((server.serv_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+			serverFunctionExecuteFailed(24, "kqueue()");
 		std::memset(&server.serv_adr, 0, sizeof(server.serv_adr));
 		server.serv_adr.sin_family = AF_INET;
 		server.serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
 		server.serv_adr.sin_port = htons(server.port);
-		setsockopt(server.serv_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-		if (bind(server.serv_sock, (struct sockaddr *)&server.serv_adr, sizeof(server.serv_adr)))
-			occurException("bind()", HTTP);
+		if (setsockopt(server.serv_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
+			serverFunctionExecuteFailed(30, "setsocketopt()");
+		if (bind(server.serv_sock, (struct sockaddr *)&server.serv_adr, sizeof(server.serv_adr)) == -1)
+			serverFunctionExecuteFailed(32, "bind()");
 		if (listen(server.serv_sock, LISTEN_SIZE))
-			occurException("listen()", HTTP);
+			serverFunctionExecuteFailed(34, "listen()");
 		EV_SET(&server.chagelist, server.serv_sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		if (kevent(this->kq, &server.chagelist, 1, NULL, 0, NULL) == -1)
-			occurException("kevent()", HTTP);
+			serverFunctionExecuteFailed(37, "kevent()");
 	}
 }
-
+/*
 void    Http::runServer()
 {
 	int	clnt_sock, nevents, sockfd;
@@ -48,6 +48,8 @@ void    Http::runServer()
 	std::string tmp;
 	bool		acpt;
 	ServerBlock	server;
+	ssize_t	str_len;
+
 	while (!flag) {
 		if ((nevents = kevent(this->kq, NULL, 0, evlist, MAX_EVENTS, NULL)) == -1)
 			occurException("kevent()", SERVER);
@@ -68,7 +70,7 @@ void    Http::runServer()
 				}
 			} if (!acpt) {
 				char req_line[BUF_SIZE];
-				ssize_t str_len = read(sockfd, req_line, BUF_SIZE);
+				str_len = read(sockfd, req_line, BUF_SIZE);
 				if (str_len == 0) {
 					close(sockfd);
 					continue ;
@@ -107,4 +109,9 @@ void	Http::send_data(int clnt_sock, char *msg, std::string &host, ssize_t &str_l
 	ResponseMsg = data.first.c_str();
 	write(clnt_sock, ResponseMsg, std::strlen(ResponseMsg));
 	write(clnt_sock, file, std::strlen(file));
+}*/
+
+void	Http::serverFunctionExecuteFailed(const int line, std::string msg) {
+	occurException(line, msg, HTTP, F_HTTP,
+	"[" + static_cast<const std::string>(strerror(errno)) + "]");
 }

@@ -1,5 +1,5 @@
 #include "../header/Http.hpp"
-
+/*
 std::string Http::setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg) {
     std::string ret = "HTTP/1.1 ";
     std::string tmp;
@@ -20,15 +20,15 @@ std::string Http::setResponseLine(std::vector<std::pair<std::string, LocationBlo
             if (location->second.ret)
                 ret += "Location:" + location->second.redirect + "\r\n";
         }
-        else 
+        else
             ret += "Content-type:text/html\r\n";
     }
     return ret;
 }
 
 std::string Http::checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt) {
-    // 경로의 길이가 30 이상일 때
-    if (root.length() >= 30)
+    // 경로의 길이가 100 이상일 때
+    if (root.length() >= 100)
         return setResponseLine(itt, it, 
             414, "Request-URI Too Long"
         );
@@ -71,7 +71,7 @@ std::string Http::checkValidRequestLine(std::string &method, std::string &root, 
     // autoindex 인데 없는 디렉토리이거나 파일이 지워져서 없을 때
     else if ((itt->second.autoindex) && !opendir((it->second.root + itt->second.default_root.substr(1)).c_str()) || !ExistFile(itt->second.index_root))
         return setResponseLine(itt, it, 
-            404, "Not Found"
+            500, "Not Found"
         );
     // 리다이렉트
     else if (itt->second.ret)
@@ -98,23 +98,64 @@ void getDirectoryListingRecursive(const std::string& directory, std::vector<std:
     }
 }
 
-std::string Http::makeAutoindex(std::string root) {
-    std::vector<std::string> listing;
-    std::string ret;
-    std::string tmp;
+std::string Http::makeAutoindex(std::string root)
+{
+    struct dirent   *entityStruct;
+    DIR             *directory;
+    std::string     dirListPage;
+    
+    directory = opendir(root.c_str());
+    dirListPage += "<html>\n";
+    dirListPage += "<head>\n";
+    dirListPage += "<title> Index of";
+    dirListPage += root;
+    dirListPage += "</title>\n";
+    dirListPage += "</head>\n";
+    dirListPage += "<body >\n";
+    dirListPage += "<h1> Index of " + root + "</h1>\n";
+    dirListPage += "<table style=\"width:80%; font-size: 15px\">\n";
+    dirListPage += "<hr>\n";
+    dirListPage += "<th style=\"text-align:left\"> File Name </th>\n";
+    dirListPage += "<th style=\"text-align:left\"> Last Modification  </th>\n";
+    dirListPage += "<th style=\"text-align:left\"> File Size </th>\n";
 
-    getDirectoryListingRecursive(root, listing);
-    tmp += "    <ol>\n";
-    for (std::vector<std::string>::iterator it = listing.begin(); it != listing.end(); it++) {
-        tmp += "        <li><a href=\""
-            + *it
-            + "\">"
-            + *it
-            + "</a></li>\n";
+    struct stat file_stat;
+    std::string file_path;
+
+    while((entityStruct = readdir(directory)) != NULL)
+    {
+        if(strcmp(entityStruct->d_name, ".") == 0)
+            continue;
+        file_path = root + entityStruct->d_name;
+        stat(file_path.c_str() , &file_stat);
+        dirListPage += "<tr>\n";
+        dirListPage += "<td>\n";
+        dirListPage += "<a href=\"";
+        dirListPage += entityStruct->d_name;
+        if (S_ISDIR(file_stat.st_mode))
+            dirListPage += "/";
+        dirListPage += "\">";
+        dirListPage += entityStruct->d_name;
+        if (S_ISDIR(file_stat.st_mode))
+            dirListPage += "/";
+        dirListPage += "</a>\n";
+        dirListPage += "</td>\n";
+        dirListPage += "<td>\n";
+        dirListPage += ctime(&file_stat.st_mtime);
+        dirListPage += "</td>\n";
+        dirListPage += "<td>\n";
+        if (!S_ISDIR(file_stat.st_mode))
+            dirListPage += ft_to_string(file_stat.st_size);
+        dirListPage += "</td>\n";
+        dirListPage += "</tr>\n";
     }
-    tmp += "    </ol>\n";
-    ret = makeHtml(tmp);
-    return ret;
+    dirListPage += "</table>\n";
+    dirListPage += "<hr>\n";
+
+    dirListPage += "</body>\n";
+    dirListPage += "</html>\n";
+
+    return dirListPage;
 }
 
 std::string Http::readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg) {
@@ -166,9 +207,11 @@ std::pair<std::string, std::string> Http::makeResponse(std::vector<std::pair<uns
     std::getline(ss, tmp);
     s << tmp;
     s >> method >> root >> http_ver >> temp;
+    if (root[root.length() - 1] == '/')
+        root = root.substr(0, root.length() - 1);
     if (it != this->server_block.end())
         for (itt = it->second.location_block.begin(); itt != it->second.location_block.end() && root.compare(itt->second.default_root); itt++);
     ret.first = checkValidRequestLine(method, root, http_ver, temp, it, itt);
     ret.second = readFile(it, itt, ret.first);
     return (ret);
-}
+}*/

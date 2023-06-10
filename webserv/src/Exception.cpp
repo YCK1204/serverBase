@@ -1,6 +1,18 @@
 #include "../header/Http.hpp"
 
-void    Http::occurException(const std::string &msg, exception type) {
+void	Http::occurException(const int &line, const std::string &msg, exception type, files file, const std::string &reason) {
+	std::string cpp;
+	switch (file) {
+		case F_HTTP    : cpp = "Http"            ; break ;
+		case PARSING   : cpp = "parsing"         ; break ;
+		case S_PARSING : cpp = "ServerParsing"   ; break ;
+		case L_PARSING : cpp = "LocationParsing" ; break ;
+		case UTIL      : cpp = "util"            ; break ;
+	}
+	exception_util(cpp + ".cpp <Line " + ft_to_string(line) + ">, " + msg + " : " + reason, type);
+}
+
+void    Http::exception_util(const std::string &msg, exception type) {
 	std::cerr << msg << std::endl;
 
 	if (type == CONFIG)
@@ -19,6 +31,38 @@ void    Http::occurException(const std::string &msg, exception type) {
 		throw SettingHttpException();
 	else if (type == SERVER)
 		throw RunServerException();
+}
+
+void    Http::checkErrnoSocket(const int line) {
+
+}
+
+void    Http::checkErrnoBind(const int line) {
+
+}
+
+void    Http::checkErrnoListen(const int line) {
+
+}
+
+void    Http::checkErrnoAccept(const int line) {
+
+}
+
+void	Http::checkErrnoSetSocketOpt(const int line) {
+
+}
+
+void	Http::checkErrnoSetEvset(const int line) {
+
+}
+
+void	Http::checkErrnoSetKqueue(const int line) {
+
+}
+
+void	Http::checkErrnoSetKevent(const int line) {
+
 }
 
 const char *Http::NotValidConfigFileException::what() const throw() { return ("Error : Not Valid Configuration File");}
