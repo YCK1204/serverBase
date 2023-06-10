@@ -8,7 +8,9 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <map>
 
+#include <ctime>
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
@@ -25,7 +27,6 @@
 
 #define LISTEN_SIZE 20
 #define BUF_SIZE 2048
-#define SMALL_BUF 2048
 #define MAX_EVENTS 100
 
 enum files {
@@ -33,7 +34,8 @@ enum files {
     PARSING,
     S_PARSING,
     L_PARSING,
-    UTIL
+    UTIL,
+    CLIENT
 };
 
 enum exception {
@@ -73,53 +75,59 @@ enum l_block_type {
 };
 
 typedef struct {
-	bool                        methods[3];
-	bool						autoindex;
-	bool						ret;
-	std::string					root;
-	std::string					index;
-	std::string					cgi;
-	std::string					redirect;
-	std::string					default_root;
-    std::string                 index_root;
+	bool                                        methods[3];
+	bool						                autoindex;
+	bool						                ret;
+	std::string					                root;
+	std::string					                index;
+	std::string					                cgi;
+	std::string					                redirect;
+	std::string					                default_root;
+    std::string                                 index_root;
 }	LocationBlock;
 
 typedef struct {
-    std::vector<LocationBlock>  location;
-    std::string                 error_page;
-	std::string					root;
-	std::string					server_name;
-    std::string					index;
-    std::string                 host;
-    std::string                 index_root;
-    int                         serv_sock;
-	int   		            	client_body_size;
-    int                         port;
-    struct sockaddr_in          serv_adr;
-    struct kevent               chagelist;
+    std::vector<LocationBlock>                  location;
+    std::string                                 error_page;
+	std::string					                root;
+	std::string					                server_name;
+    std::string					                index;
+    std::string                                 host;
+    std::string                                 index_root;
+    int                                         serv_sock;
+	int   		            	                client_body_size;
+    int                                         port;
+    struct sockaddr_in                          serv_adr;
+    struct kevent                               chagelist;
+    std::vector<std::pair<int, std::string> >   request;
+    std::vector<ssize_t>                        size;
 }	ServerBlock;
+
+typedef struct {
+    std::string     request;
+    std::time_t     last_active_times;
+    unsigned short  port;
+    ssize_t    str_len;
+}   ClientData;
 
 class Http {
 private:
-    int kq;
-    std::vector<ServerBlock>	server;
+    std::vector<ServerBlock>   server;
+    std::map<int, ClientData>  clients;
+    int kq, clnt_sock, sockfd, nevents;
+    ssize_t                    str_len;
+    std::string                tmp;
+	struct kevent              evlist[MAX_EVENTS];
+	struct kevent              *curr_event;
 
     Http();
     Http &operator = (const Http &s);
 
-
-    
     /* exception_functions*/
     void	                                                        occurException(const int &line, const std::string &msg, exception type, files file, const std::string &reason);
     void                                                            exception_util(const std::string &msg, exception type);
-    void                                                            checkErrnoSocket(const int line);
-    void                                                            checkErrnoBind(const int line);
-    void                                                            checkErrnoListen(const int line);
-    void                                                            checkErrnoAccept(const int line);
-    void                                                            checkErrnoSetSocketOpt(const int line);
-    void                                                            checkErrnoSetEvset(const int line);
-    void                                                            checkErrnoSetKqueue(const int line);
-    void                                                            checkErrnoSetKevent(const int line);
+    void	                                                        serverFunctionExecuteFailed(const int line, std::string msg);
+    void	                                                        serverFunctionExecuteFailed(const int line, std::string msg, std::string detail);
     /* exception_functions*/
 
     /* parsing_functions*/
@@ -135,9 +143,9 @@ private:
     std::string                                                     buildServerOption(std::ifstream &file, std::stringstream &ss, s_block_type type);
     LocationBlock                                                   makeLocation(std::ifstream &file, std::stringstream &ss);
     void	                                                        checkValidateAddress(int addr[4], const std::string &host);
+    void	                                                        checkValidAddr(const std::string &host);
+    void                                                            checkValidConfig();
     /* parsing_functions*/
-
-    void	                                                        serverFunctionExecuteFailed(const int line, std::string msg);
 
     /* util_functions */
     uint16_t                                                        ft_ntohs(uint16_t port);
@@ -151,31 +159,29 @@ private:
     void	                                                        exception_util(const std::string &str, s_block_type type);
     /* util_functions */
 
-    /* parsing_functions */
-    void                                    checkExistFile();
-    void                                    checkValidConfig();
-    void                                    checkOverlapLocationRoot(const std::string &root, ServerBlock &server);
-    void	                                checkValidAddr(const std::string &host);
-    void                                    checkOverlapServerPort(const unsigned short &port);
-    std::pair<std::string, LocationBlock>	location_block_split(std::ifstream &config, std::string &default_root);
-    void	                                location_block_argu_split(std::stringstream &ss, l_block_type t, LocationBlock &ret);
-    void	                                server_block_argu_split(std::stringstream &ss, s_block_type t, ServerBlock &ret);
-    std::pair<unsigned short, ServerBlock>	Server_split(std::ifstream &config);
-    /* parsing_functions */
-    
     /* server_functions */
-    void                                    runServer();
-    void	                                send_data(int clnt_sock, char *msg, std::string &host, ssize_t &str_len);
-    void                                    SettingHttp();
+    void                                                            runServer();
+    void                                                            SettingHttp();
+    void	                                                        clientHandler();
+    void	                                                        writeResponse(int clnt_sock);
+    void	                                                        readRequestMsg(int clnt_sock);
+    void	                                                        disconnectClient(int clnt_sock);
+    void	                                                        clientAccept(int serv_sock, int clnt_sock, ServerBlock &server);
+    void	                                                        eventErrHandler(int serv_sock, int clnt_sock);
+    void	                                                        eventReadHandler(int serv_sock, int clnt_sock, ServerBlock &server);
     /* server_functions */
 
+    /* client_functions*/
+    void                                                            clientInit(uint16_t port, int clnt_sock);
+    /* client_functions*/
+
     /* response_functions */
-    std::string                             makeHtml(const std::string msg);
-    std::string                             makeAutoindex(std::string root);
-    std::pair<std::string, std::string>     makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);
-    std::string                             readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg);
-    std::string                             setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg);
-    std::string                             checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt);
+    std::string                                                     makeHtml(const std::string msg);
+    std::string                                                     makeAutoindex(std::string root);
+    std::pair<std::string, std::string>                             makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);
+    std::string                                                     readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg);
+    std::string                                                     setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg);
+    std::string                                                     checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt);
     /* response_functions */
     
 
