@@ -1,10 +1,10 @@
 #include "../header/Http.hpp"
 
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
-    clients[clnt_sock].clnt_adr = clnt_adr;
-    clients[clnt_sock].request = "";
-    clients[clnt_sock].last_active_times = std::time(NULL);
     clients[clnt_sock].str_len = 0;
+    clients[clnt_sock].request = "";
+    clients[clnt_sock].clnt_adr = clnt_adr;
+    clients[clnt_sock].last_active_times = std::time(NULL);
 	std::cout << "client connected : " << clnt_sock << " [" << ft_ntohs(clients[clnt_sock].clnt_adr.sin_port) << "]" << std::endl;
 }
 
@@ -32,13 +32,13 @@ void	Http::disconnectClient(int clnt_sock) {
 }
 
 void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
+	int					clnt_sock;
 	struct sockaddr_in	clnt_adr;
 	socklen_t			clnt_adr_size;
-	int					clnt_sock;
 
 	clnt_adr_size = sizeof(clnt_adr);
 	if ((clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1) {
-        occurException(39, "accept()", HTTP, CLIENT,
+        occurException(40, "accept()", HTTP, CLIENT,
         "accept function error");
     }
     clientInit(clnt_adr, clnt_sock);
@@ -48,7 +48,7 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
 }
 
 void	Http::readRequestMsg(int clnt_sock) {
-	char buf[BUF_SIZE];
+	char	buf[BUF_SIZE];
 	ssize_t	n;
 
 	n = read(clnt_sock, buf, BUF_SIZE);
@@ -58,18 +58,18 @@ void	Http::readRequestMsg(int clnt_sock) {
 	} else if (n) {
 		buf[n] = '\0';
 		clients[clnt_sock].str_len += n;
-		clients[clnt_sock].request += static_cast<std::string>(buf);
 		clients[clnt_sock].last_active_times = std::time(NULL);
+		clients[clnt_sock].request += static_cast<std::string>(buf);
 	}
 }
 
 void	Http::writeResponse(int clnt_sock) {
-	
+
 }
 
 void	Http::clientHandler() {
 	ServerBlock			server;
-	
+
 	for (int i = 0; i < nevents; i++) {
 		curr_event = &evlist[i];
 		for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {

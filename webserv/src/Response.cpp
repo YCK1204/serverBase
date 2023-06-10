@@ -1,4 +1,7 @@
 #include "../header/Http.hpp"
+
+
+
 /*
 std::string Http::setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg) {
     std::string ret = "HTTP/1.1 ";
