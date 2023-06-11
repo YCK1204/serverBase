@@ -118,7 +118,7 @@ class Http {
 private:
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         kq, clnt_sock, nevents, err;
+    int                                         kq, nevents, err;
 	struct kevent                               evlist[MAX_EVENTS];
 	struct kevent                               *curr_event;
     Mime                                        mime;
@@ -154,6 +154,7 @@ private:
     /* parsing_functions*/
 
     /* util_functions */
+    std::string                                 &getDate();
     std::string                                 ft_to_string(int n);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
 
@@ -163,6 +164,7 @@ private:
 
     uint16_t                                    ft_ntohs(uint16_t port);
     bool	                                    ExistFile(std::string &root);
+    int                                         ft_stoi(const std::string &str);
     bool	                                    ExistDirectory(std::string &root);
     int                                         ft_stoi(const std::string &str, s_block_type type);
     /* util_functions */
@@ -189,10 +191,24 @@ private:
     /* html_functions*/
 
     /* response_functions */
-    std::string                                 &getMsg(int clnt_sock);
-    std::string                                 &getContent(int clnt_sock);
-    std::string                                 &buildErrorMsg(int clnt_sock);
+    ServerBlock                                 getServer(std::string host, std::string root);
+    LocationBlock                               getLocation(std::string root, ServerBlock server);
 
+    std::string                                 getMsg(int clnt_sock);
+    std::string                                 getContent(int clnt_sock);
+    std::string                                 buildErrorMsg(int clnt_sock);
+    std::string                                 getRoot(std::string req_msg);
+    std::string                                 getHTTP(std::string req_msg);
+    std::string                                 getHost(std::string req_msg);
+    std::string                                 getMethod(std::string req_msg);
+    std::string                                 getHttpVer(std::string req_msg);
+    std::string                                 getConnection(std::string req_msg);
+    std::string                                 getResponseLine(std::string req_msg);
+    std::string                                 getResponseBody(std::string req_msg);
+    std::string                                 getResponseHeader(std::string req_msg);
+    std::pair<std::string, std::string>         getResponse(int clnt_sock);
+
+    void                                        checkRequestMsg(std::string method, std::string root, std::string http, std::string ver, std::string host, std::string connection);
 
     std::string                                 makeAutoindex(std::string root);
     std::pair<std::string, std::string>         makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);

@@ -40,7 +40,7 @@ void    Http::SettingHttp()
 			serverFunctionExecuteFailed(39, "kevent()");
 	}
 }
-/*
+
 void    Http::runServer()
 {
 	while (!flag) {
@@ -53,4 +53,4 @@ void    Http::runServer()
 	
 	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++)
 		close(it->serv_sock);
-}*/
+}

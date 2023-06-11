@@ -1,5 +1,5 @@
 #include "../header/Http.hpp"
-/*
+
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
 	clients[clnt_sock].host = 80;
     clients[clnt_sock].str_len = 0;
@@ -92,9 +92,9 @@ void	Http::clientHandler() {
 			if (curr_event->flags & EV_ERROR)
 				eventErrHandler(server.serv_sock, curr_event->ident);
 			else if (curr_event->filter == EVFILT_READ)
-				eventReadHandler(server.serv_sock, clnt_sock, server);
+				eventReadHandler(server.serv_sock, curr_event->ident, server);
 			else if (curr_event->filter == EVFILT_WRITE)
 				writeResponse(curr_event->ident);
 		}
 	}
-}*/
+}

@@ -31,6 +31,24 @@ int Http::ft_stoi(const std::string &str, s_block_type type) {
 	return (ret);
 }
 
+int Http::ft_stoi(const std::string &str) {
+    int ret = 0;
+
+	if (str[0] == '-') {
+		return 0;
+	}
+    for (int i = 0; str[i]; i++) {
+		if (str[i] == '.')
+			continue ;
+        if (!('0' <= str[i] && str[i] <= '9') || ret < 0) {
+			return 0;
+		}
+		ret *= 10;
+		ret += str[i] - '0';
+    }
+	return (ret);
+}
+
 void	Http::printConfigInfo() {
 	for (std::vector<ServerBlock>::iterator itt = this->server.begin(); itt != this->server.end(); itt++) {
 		ServerBlock server = *itt;
@@ -127,4 +145,31 @@ std::string Http::ft_to_string(int n) {
 	}
 	recursive_to_string(n, ret);
     return ret;
+}
+
+std::string &Http::getDate() {
+    int month;
+    char buffer[80];
+    ssize_t monthPos;
+    struct tm* timeInfo;
+    struct tm* selTimeInfo;
+    time_t rawTime, selTime;
+    std::string dateHeader, monthName;
+    const char* monthNames[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+
+    std::time(&rawTime);
+    timeInfo = std::gmtime(&rawTime);
+    selTime = rawTime + (9 * 3600);
+    selTimeInfo = std::gmtime(&selTime);
+    std::strftime(buffer, sizeof(buffer), "Date: %a, %d %b %Y %H:%M:%S SEL", selTimeInfo);
+    dateHeader = static_cast<std::string>(buffer);
+    month = selTimeInfo->tm_mon;
+    monthName = monthNames[month];
+    monthPos = dateHeader.find("MMM");
+    if (monthPos != std::string::npos)
+        dateHeader.replace(monthPos, 3, monthName);
+    return dateHeader;
 }
