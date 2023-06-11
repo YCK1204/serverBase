@@ -1,7 +1,7 @@
 #include "../header/Http.hpp"
 
 
-
+/*
 std::string &Http::getMsg(int clnt_sock) {
     std::string tmp, req_msg = clients[clnt_sock].request;
     std::stringstream   ss(req_msg);
@@ -16,6 +16,8 @@ std::string &Http::getContent(int clnt_sock) {
 std::string &Http::buildErrorMsg(int clnt_sock) {
 
 }
+*/
+
 
 /*
 std::string Http::setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg) {

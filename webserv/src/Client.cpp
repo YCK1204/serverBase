@@ -1,5 +1,5 @@
 #include "../header/Http.hpp"
-
+/*
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
 	clients[clnt_sock].host = 80;
     clients[clnt_sock].str_len = 0;
@@ -97,4 +97,4 @@ void	Http::clientHandler() {
 				writeResponse(curr_event->ident);
 		}
 	}
-}
+}*/

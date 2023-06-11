@@ -85,7 +85,6 @@ typedef struct {
 	std::string					                root;
 	std::string					                index;
 	std::string					                redirect;
-    std::string                                 index_root;
 	std::string					                default_root;
 }	LocationBlock;
 

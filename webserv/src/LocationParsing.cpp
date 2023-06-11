@@ -2,16 +2,18 @@
 
 LocationBlock Http::makeLocation(std::ifstream &file, std::stringstream &ss) {
     LocationBlock ret;
+    ret.ret = false;
+    ret.autoindex = false;
     std::string line, cmd, tmp, temp, tt;
     int types[6] = {}, t = 0;
 
     ss >> tmp >> temp >> tt;
     if (temp.compare("{")) {
-        occurException(9, line, CONFIG, L_PARSING,
+        occurException(11, line, CONFIG, L_PARSING,
         "location is not started \"location default_root {\"");
     } else {
         if (!tt.empty()) {
-            occurException(13, line, CONFIG, L_PARSING,
+            occurException(15, line, CONFIG, L_PARSING,
             "location is not started \"location default_root {\"");
         }
     }
@@ -25,7 +27,7 @@ LocationBlock Http::makeLocation(std::ifstream &file, std::stringstream &ss) {
         ss >> cmd;
         if (!cmd.compare("}") && ++t)
             break ;
-        if (!cmd.compare("method") && ++types[METHOD])
+        if (!cmd.compare("allow_methods") && ++types[METHOD])
             buildLocationOption(ss, ret.methods);
         else if (!cmd.compare("autoindex") && ++types[AUTOINDEX])
             ret.autoindex = buildLocationOption(ss, "");
@@ -33,13 +35,17 @@ LocationBlock Http::makeLocation(std::ifstream &file, std::stringstream &ss) {
             ret.root = buildLocationOption(ss);
         else if (!cmd.compare("index") && ++types[L_INDEX])
             ret.index = buildLocationOption(ss);
-        else if (!cmd.compare("return") && ++types[RETURN])
+        else if (!cmd.compare("return") && ++types[RETURN] && (ret.ret = true))
             ret.redirect = buildLocationOption(ss);
         else if (!cmd.compare("cgi-bin") && ++types[CGI])
             ret.cgi = buildLocationOption(ss);
+        else {
+            occurException(42, line, CONFIG, L_PARSING,
+            "location block option error");
+        }
     }
     if (t != 1) {
-        occurException(41, "", CONFIG, L_PARSING,
+        occurException(47, "", CONFIG, L_PARSING,
         "location is not finished \"}\"");
     }
     return ret;
@@ -51,7 +57,8 @@ void    Http::buildLocationOption(std::stringstream &ss, bool types[3]) {
 
     for (int i = 0; i < 3; i++)
         types[i] = false;
-    for (int i = 0; i < 4; i++) {
+    for (;;) {
+        t.clear();
         ss >> t;
         if (t.empty())
             break ;
@@ -60,13 +67,13 @@ void    Http::buildLocationOption(std::stringstream &ss, bool types[3]) {
         types[tmp] = true;
     }
     if (!type[0] && !type[1] && !type[2]) {
-        occurException(62, "method", CONFIG, L_PARSING,
+        occurException(69, "method", CONFIG, L_PARSING,
         "empty method");
     }
     for (int i = 0; i < 3; i++) {
         if (type[i] > 1)
-            occurException(67, "method", CONFIG, L_PARSING,
-            "should noly appear once");
+            occurException(74, "method", CONFIG, L_PARSING,
+            "should only appear once");
     }
 }
 
@@ -80,7 +87,7 @@ int Http::distinctionMethods(std::string &method) {
     else if (!method.compare("DELETE"))
         ret = 2;
     else {
-        occurException(78, method, CONFIG, L_PARSING,
+        occurException(89, method, CONFIG, L_PARSING,
         "methods must (GET, POST, DELETE)");
     }
     return ret;
@@ -97,7 +104,7 @@ bool    Http::buildLocationOption(std::stringstream &ss, std::string tt) {
         ret = false;
     else if (!tt.empty())
     {
-        occurException(98, t, CONFIG, L_PARSING,
+        occurException(105, t, CONFIG, L_PARSING,
         "autoindex must on or off");
     }
     return ret;
@@ -108,7 +115,7 @@ std::string Http::buildLocationOption(std::stringstream &ss) {
 
     ss >> t >> tt;
     if (!tt.empty()) {
-        occurException(110, tt, CONFIG, L_PARSING,
+        occurException(117, tt, CONFIG, L_PARSING,
         "bad argument location option");
     }
     return t;

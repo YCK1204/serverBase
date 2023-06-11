@@ -76,7 +76,6 @@ void	Http::printConfigInfo() {
 				std::cout << "        return " << location.redirect << std::endl;
 			if (!location.cgi.empty())
 				std::cout << "        cgi-bin " << location.cgi << std::endl;
-			std::cout << "        index_root " << location.index_root << std::endl;
 			std::cout << "    }" << std::endl;
 		}
 		std::cout << "}\n" << std::endl;
