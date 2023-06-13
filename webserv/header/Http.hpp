@@ -115,10 +115,10 @@ typedef struct {
 
 class Http {
 private:
-    fd_set                                      events;
+    fd_set                                      events, read_event, err_event;
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         kq, nevents, err, fd_max, t;
+    int                                         kq, nevents, err, fd_max;
 	struct kevent                               evlist[MAX_EVENTS];
 	struct kevent                               *curr_event;
     Mime                                        mime;

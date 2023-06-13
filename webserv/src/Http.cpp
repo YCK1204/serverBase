@@ -45,9 +45,46 @@ void    Http::SettingHttp() {
 				serverFunctionExecuteFailed(24, "setsockopt()");
 			if ((bind(it->serv_sock, (struct sockaddr *)&it->serv_adr, sizeof(it->serv_adr))) == -1)
 				serverFunctionExecuteFailed(24, "bind()");
-			std::cout << it->serv_sock << std::endl;
 		}
 	}
+}
+
+void	Http::initializeServer() {
+	bool		serverOverlap;
+
+	FD_ZERO(&events);
+	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
+		serverOverlap = false;
+		for (std::vector<ServerBlock>::iterator itt = this->server.begin(); itt != it; itt++) {
+			if (it->port == itt->port) {
+				serverOverlap = true;
+				break ;
+			}
+		}
+		if (!serverOverlap) {
+			if ((listen(it->serv_sock, 20)) == -1)
+				serverFunctionExecuteFailed(47, "listen()");
+			FD_SET(it->serv_sock, &events);
+			if (fcntl(it->serv_sock, F_SETFL, O_NONBLOCK) == -1)
+				serverFunctionExecuteFailed(47, "fcntl()");
+			fd_max = it->serv_sock;
+		}
+	}
+}
+
+void    Http::runServer()
+{
+	initializeServer();
+	while (!flag) {
+		read_event = events;
+		err_event = events;
+		if ((select(fd_max + 1, &read_event, 0, &err_event, NULL)) < 0)
+			serverFunctionExecuteFailed(136, "select()");
+		clientHandler();
+	}
+
+	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++)
+		close(it->serv_sock);
 }
 
 /*void    Http::SettingHttp()
@@ -83,41 +120,3 @@ void    Http::SettingHttp() {
 		// 	serverFunctionExecuteFailed(47, "kevent()");
 		// changeList.clear();
 		// signal(SIGINT, handle_signal);
-
-void	Http::initializeServer() {
-	bool		serverOverlap;
-
-	FD_ZERO(&events);
-	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
-		serverOverlap = false;
-		for (std::vector<ServerBlock>::iterator itt = this->server.begin(); itt != it; itt++) {
-			if (it->port == itt->port) {
-				serverOverlap = true;
-				break ;
-			}
-		}
-		if (!serverOverlap) {
-			if ((listen(it->serv_sock, 20)) == -1)
-				serverFunctionExecuteFailed(47, "listen()");
-			FD_SET(it->serv_sock, &events);
-			if (fcntl(it->serv_sock, F_SETFL, O_NONBLOCK) == -1)
-				serverFunctionExecuteFailed(47, "fcntl()");
-
-			fd_max = it->serv_sock;
-			std::cout << it->serv_sock << std::endl;
-		}
-	}
-}
-
-void    Http::runServer()
-{
-	initializeServer();
-	while (!flag) {
-		// err_event = events;
-		// std::cout << "fd mas : " << fd_max << std::endl; 
-		clientHandler();
-	}
-	
-	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++)
-		close(it->serv_sock);
-}

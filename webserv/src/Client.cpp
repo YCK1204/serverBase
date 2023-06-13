@@ -43,6 +43,7 @@ void	Http::eventReadHandler(int clnt_sock) {
 			readRequestMsg(clnt_sock);
 		}
 	}
+
 }
 
 void	Http::disconnectClient(int clnt_sock) {
@@ -72,55 +73,41 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
 	// change_events(changeList, clnt_sk, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 }
 
-void	Http::readRequestMsg(int clnt_sock) {
-	char	buf[BUF_SIZE];
-	ssize_t	n;
-	int		sock;
+void Http::readRequestMsg(int clnt_sock) {
+    ssize_t n;
+    int sock;
 
-	std::cout << "read : " << clnt_sock << std::endl;
-		sock = clnt_sock;
-
-	n = read(clnt_sock, buf, BUF_SIZE);
-		std::cout << "n : " << n << std::endl;
-	if (n == -1) {
-		disconnectClient(clnt_sock);
-		std::cout << "sibal" << std::endl;
-		exit(12);
-		return ;
-	} else if (n) {
-		buf[n] = '\0';
-		clients[clnt_sock].str_len += n;
-		clients[clnt_sock].last_active_times = std::time(NULL);
-		clients[clnt_sock].request += buf;
-		std::cout << "req msg : " << clients[clnt_sock].request << "end" << std::endl;
-		size_t	len = clients[clnt_sock].request.length();
-		std::string	tmp = clients[clnt_sock].request;
-			std::cout << "before" << clnt_sock << std::endl;
-		if (len > 4 && tmp[len - 4] == '\r' && tmp[len - 3] == '\n' && tmp[len - 2] == '\r' && tmp[len - 1] == '\n') {
-			std::cout << "before" << clnt_sock << std::endl;
-			writeResponse(clnt_sock);
-		}
-	}
-	// } else {
-	// 	change_events(changeList, sock, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-	// 	change_events(changeList, sock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	// }
+    sock = clnt_sock;
+    char* buf = new char[BUF_SIZE];
+    n = read(clnt_sock, buf, BUF_SIZE);
+    if (n == -1) {
+        disconnectClient(clnt_sock);
+        delete[] buf;
+        return;
+    } else if (n) {
+        buf[n] = '\0';
+        clients[clnt_sock].str_len += n;
+        clients[clnt_sock].last_active_times = std::time(NULL);
+        clients[clnt_sock].request += buf;
+        size_t len = clients[clnt_sock].request.length();
+        std::string tmp = clients[clnt_sock].request;
+        if (len > 3 && !clients[clnt_sock].request.substr(len - 3).compare("\r\n\r")) {
+            writeResponse(clnt_sock);
+        }
+    }
+    delete[] buf;
 }
 
 void	Http::writeResponse(int clnt_sock) {
 	std::pair<std::string, std::string>	response;
 
-			std::cout << "after" << clnt_sock << std::endl;
-	std::cout << "client : " << clnt_sock << ", req_msg : " << clients[clnt_sock].request << std::endl;
+	std::cout << "clnt sock : " << clnt_sock << std::endl;
+	std::cout << "req_msg : " << clients[clnt_sock].request << std::endl;
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
 			err = 0;
-		std::cout << "write client : " << clnt_sock << std::endl;
-			std::cout << "client : " << clnt_sock << ", req_msg : " << clients[clnt_sock].request << std::endl;
 		response.first = buildErrorMsg(clnt_sock);
 		response.second = buildErrorHtml(clnt_sock);
-		// if (err)
-		// 	response.first = buildErrorMsg(clnt_sock);
 		if ((write(clnt_sock, response.first.c_str(), response.first.length())) == -1)
 			std::cerr << "Error : write error (response msg)" << std::endl;
 		else
@@ -135,19 +122,11 @@ void	Http::writeResponse(int clnt_sock) {
 }
 
 void	Http::clientHandler() {
-	fd_set	read_event;
-
-	read_event = events;
-	std::cout << *read_event.fds_bits << std::endl;
-	if ((select(fd_max + 1, &read_event, 0, 0, NULL)) < 0)
-			serverFunctionExecuteFailed(136, "select()");
-	std::cout << "zz" << std::endl;
 	for (int i = 0; i <= fd_max; i++) {
-		std::cout << "bits : " << *read_event.fds_bits << std::endl;
-		if (FD_ISSET(i, &read_event)) {
-			std::cout << "read event !!!!!!!!!!!" << std::endl;
+		if (FD_ISSET(i, &err_event))
+			eventErrHandler(i);
+		else if (FD_ISSET(i, &read_event))
 			eventReadHandler(i);
-		}
 	}
 }
 
