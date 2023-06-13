@@ -147,7 +147,7 @@ std::string Http::ft_to_string(int n) {
     return ret;
 }
 
-std::string &Http::getDate() {
+std::string Http::getDate() {
     int month;
     char buffer[80];
     ssize_t monthPos;

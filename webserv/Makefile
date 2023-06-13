@@ -1,14 +1,14 @@
 NAME = webserv
 CPP = c++
-FLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
 SRCS = $(wildcard ./src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
+FLAG = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g3
 
-%.o : %.c
-	$(CPP) $(FLAGS) -o $@
+# %.o : %.c
+# 	$(CPP) $(FLAGS) -c
 
 $(NAME) : $(OBJS)
-	$(CPP) $(FLAGS) -o $@ $^
+	$(CPP) $(FLAG) $(OBJS) -o $@
 
 all : $(NAME)
 

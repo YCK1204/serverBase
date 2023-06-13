@@ -28,7 +28,7 @@
 #include "../header/Mime.hpp"
 
 #define LISTEN_SIZE 20
-#define BUF_SIZE 2048
+#define BUF_SIZE 2
 #define MAX_EVENTS 100
 
 enum files {
@@ -89,7 +89,6 @@ typedef struct {
 }	LocationBlock;
 
 typedef struct {
-    struct kevent                               chagelist;
     struct sockaddr_in                          serv_adr;
     std::vector<LocationBlock>                  location;
 	std::string					                root;
@@ -116,12 +115,15 @@ typedef struct {
 
 class Http {
 private:
+    fd_set                                      events;
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         kq, nevents, err;
+    int                                         kq, nevents, err, fd_max, t;
 	struct kevent                               evlist[MAX_EVENTS];
 	struct kevent                               *curr_event;
     Mime                                        mime;
+    std::vector<struct kevent>                  changeList;
+
 
     Http();
     Http &operator = (const Http &s);
@@ -154,7 +156,7 @@ private:
     /* parsing_functions*/
 
     /* util_functions */
-    std::string                                 &getDate();
+    std::string                                 getDate();
     std::string                                 ft_to_string(int n);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
 
@@ -172,6 +174,8 @@ private:
     /* server_functions */
     void                                        runServer();
     void                                        SettingHttp();
+    void	                                    change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
+    void	                                    initializeServer();
     /* server_functions */
 
     /* client_functions*/
@@ -179,10 +183,10 @@ private:
     void	                                    writeResponse(int clnt_sock);
     void	                                    readRequestMsg(int clnt_sock);
     void	                                    disconnectClient(int clnt_sock);
-    void	                                    eventErrHandler(int serv_sock, int clnt_sock);
+    void	                                    eventErrHandler(int clnt_sock);
     void                                        clientInit(struct sockaddr_in clnt_adr, int clnt_sock);
     void	                                    clientAccept(int serv_sock, int clnt_sock, ServerBlock &server);
-    void	                                    eventReadHandler(int serv_sock, int clnt_sock, ServerBlock &server);
+    void	                                    eventReadHandler(int clnt_sock);
     /* client_functions*/
 
     /* html_functions*/

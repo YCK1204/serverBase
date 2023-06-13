@@ -1,195 +1,195 @@
 #include "../header/Http.hpp"
-/* line */
-std::string Http::getMethod(std::string req_msg) {
-    std::stringstream ss(req_msg);
-    std::string ret;
+// /* line */
+// std::string Http::getMethod(std::string req_msg) {
+//     std::stringstream ss(req_msg);
+//     std::string ret;
 
-    ss >> ret;
-    return ret;
-}
+//     ss >> ret;
+//     return ret;
+// }
 
-std::string Http::getRoot(std::string req_msg) {
-    std::stringstream ss(req_msg);
-    std::string tmp, ret;
+// std::string Http::getRoot(std::string req_msg) {
+//     std::stringstream ss(req_msg);
+//     std::string tmp, ret;
 
-    ss >> tmp >> ret;
-    return ret;
-}
+//     ss >> tmp >> ret;
+//     return ret;
+// }
 
-std::string Http::getHTTP(std::string req_msg) {
-    std::stringstream ss(req_msg);
-    std::string t, tt, ret;
+// std::string Http::getHTTP(std::string req_msg) {
+//     std::stringstream ss(req_msg);
+//     std::string t, tt, ret;
 
-    ss >> t >> tt >> ret;
-    if (ret.find("HTTP") != std::string::npos)
-        ret.substr(0, 4);
-    return ret;
-}
+//     ss >> t >> tt >> ret;
+//     if (ret.find("HTTP") != std::string::npos)
+//         ret.substr(0, 4);
+//     return ret;
+// }
 
-std::string Http::getHttpVer(std::string req_msg) {
-    std::stringstream ss(req_msg);
-    std::string t, tt, ret;
-    size_t  len = 0;
+// std::string Http::getHttpVer(std::string req_msg) {
+//     std::stringstream ss(req_msg);
+//     std::string t, tt, ret;
+//     size_t  len = 0;
 
-    ss >> t >> tt >> ret;
-    if ((len = ret.find("/")) != std::string::npos)
-        ret.substr(len + 1);
-    return ret;
-}
+//     ss >> t >> tt >> ret;
+//     if ((len = ret.find("/")) != std::string::npos)
+//         ret.substr(len + 1);
+//     return ret;
+// }
 
-std::string Http::getResponseLine(std::string req_msg) {
+// // std::string Http::getResponseLine(std::string req_msg) {
     
-}
-/* line */
+// // }
+// /* line */
 
-/* header */
-std::string Http::getHost(std::string req_msg) {
-    std::stringstream   ss(req_msg);
-    std::string         line, ret, cmp;
-    size_t              len;
+// /* header */
+// std::string Http::getHost(std::string req_msg) {
+//     std::stringstream   ss(req_msg);
+//     std::string         line, ret, cmp;
+//     size_t              len;
 
-    cmp = "HOST:";
-    while (std::getline(ss, line)) {
-        if (line.find(cmp))
-            break ;
-        line.clear();
-    }
-    if (std::strncmp(line.c_str(), cmp.c_str(), cmp.length()))
-        return (ret = "65536");
-    len = line.rfind(":");
-    if (len == std::string::npos)
-        return (ret = "65536");
-    ret = line.substr(len + 1);
-    return ret;
-}
+//     cmp = "HOST:";
+//     while (std::getline(ss, line)) {
+//         if (line.find(cmp))
+//             break ;
+//         line.clear();
+//     }
+//     if (std::strncmp(line.c_str(), cmp.c_str(), cmp.length()))
+//         return (ret = "65536");
+//     len = line.rfind(":");
+//     if (len == std::string::npos)
+//         return (ret = "65536");
+//     ret = line.substr(len + 1);
+//     return ret;
+// }
 
-std::string Http::getConnection(std::string req_msg) {
-    std::stringstream   ss(req_msg);
-    std::string         line, ret, cmp;
-    size_t              len;
+// std::string Http::getConnection(std::string req_msg) {
+//     std::stringstream   ss(req_msg);
+//     std::string         line, ret, cmp;
+//     size_t              len;
 
-    cmp = "Connection:";
-    while (std::getline(ss, line)) {
-        if (line.find(cmp))
-            break ;
-        line.clear();
-    }
-    if (std::strncmp(line.c_str(), cmp.c_str(), cmp.length()))
-        return (ret = "");
-    len = line.rfind(":");
-    if (len == std::string::npos)
-        return (ret = "0");
-    ret = line.substr(len + 1);
-    return ret;
-}
+//     cmp = "Connection:";
+//     while (std::getline(ss, line)) {
+//         if (line.find(cmp))
+//             break ;
+//         line.clear();
+//     }
+//     if (std::strncmp(line.c_str(), cmp.c_str(), cmp.length()))
+//         return (ret = "");
+//     len = line.rfind(":");
+//     if (len == std::string::npos)
+//         return (ret = "0");
+//     ret = line.substr(len + 1);
+//     return ret;
+// }
 
-std::string Http::getResponseHeader(std::string req_msg) {
+// // std::string Http::getResponseHeader(std::string req_msg) {
 
-}
-/* header */
+// // }
+// // /* header */
 
-std::string Http::getResponseBody(std::string req_msg) {
+// // std::string Http::getResponseBody(std::string req_msg) {
 
-}
+// // }
 
-std::string Http::getMsg(int clnt_sock) {
-    std::string ret, req_msg = clients[clnt_sock].request;
+// // std::string Http::getMsg(int clnt_sock) {
+// //     std::string ret, req_msg = clients[clnt_sock].request;
     
-}
+// // }
 
-std::string Http::getContent(int clnt_sock) {
+// // std::string Http::getContent(int clnt_sock) {
 
-}
+// // }
 
-std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
-    std::string req_msg = clients[clnt_sock].request;
-    std::string method, root, http, ver, ret, host, connection;
-    std::pair<std::string, std::string> ret;
+// std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
+//     std::string req_msg = clients[clnt_sock].request;
+//     std::string method, root, http, ver, ret, host, connection;
+//     std::pair<std::string, std::string> ret;
     
-    method     = getMethod(req_msg);
-    root       = getRoot(req_msg);
-    http       = getHTTP(req_msg);
-    ver        = getHttpVer(req_msg);
-    host       = getHost(req_msg);
-    connection = getConnection(req_msg);
-    checkRequestMsg(method, root, http, ver, host, connection);
+//     method     = getMethod(req_msg);
+//     root       = getRoot(req_msg);
+//     http       = getHTTP(req_msg);
+//     ver        = getHttpVer(req_msg);
+//     host       = getHost(req_msg);
+//     connection = getConnection(req_msg);
+//     checkRequestMsg(method, root, http, ver, host, connection);
 
-    if (err)
-        ret.first = buildErrorMsg(clnt_sock);
+//     if (err)
+//         ret.first = buildErrorMsg(clnt_sock);
 
-    else {
-    //    err.first = getResponseLine(clnt_sock, );
+//     else {
+//     //    err.first = getResponseLine(clnt_sock, );
 
-    }
-}
+//     }
+// }
 
-ServerBlock Http::getServer(std::string host, std::string root) {
-    int     port = ft_stoi(host);
-    bool    f = false;
-    std::vector<ServerBlock>::iterator it;
+// ServerBlock Http::getServer(std::string host, std::string root) {
+//     int     port = ft_stoi(host);
+//     bool    f = false;
+//     std::vector<ServerBlock>::iterator it;
 
-    for (it = this->server.begin(); it != this->server.end(); it++) {
-        ServerBlock &server = *it;
-        if (server.port == port) { // 포트가 같을 때
-            for (std::vector<LocationBlock>::iterator it = server.location.begin(); it != server.location.end(); it++) {
-                LocationBlock &location = *it;
-                if (!location.default_root.compare(root)) { // 루트 발견
-                    f = true;
-                    break ;
-                }
-            }
-        }
-        if (f)
-            break ;
-    }
-    if (it == this->server.end()) { // 루트가 없을 때
-        err = 404;
-        for (it = this->server.begin(); it != this->server.end(); it++) {
-            ServerBlock &server = *it;
-            if (server.port == port)
-                break ;
-        }
-    }
+//     for (it = this->server.begin(); it != this->server.end(); it++) {
+//         ServerBlock &server = *it;
+//         if (server.port == port) { // 포트가 같을 때
+//             for (std::vector<LocationBlock>::iterator it = server.location.begin(); it != server.location.end(); it++) {
+//                 LocationBlock &location = *it;
+//                 if (!location.default_root.compare(root)) { // 루트 발견
+//                     f = true;
+//                     break ;
+//                 }
+//             }
+//         }
+//         if (f)
+//             break ;
+//     }
+//     if (it == this->server.end()) { // 루트가 없을 때
+//         err = 404;
+//         for (it = this->server.begin(); it != this->server.end(); it++) {
+//             ServerBlock &server = *it;
+//             if (server.port == port)
+//                 break ;
+//         }
+//     }
 
-    if (it == this->server.end())  // 포트가 이상할 때
-        return *(this->server.begin());
-    return *it;
-}
+//     if (it == this->server.end())  // 포트가 이상할 때
+//         return *(this->server.begin());
+//     return *it;
+// }
 
-LocationBlock    Http::getLocation(std::string root, ServerBlock server) {
-    std::vector<LocationBlock>::iterator it;
+// LocationBlock    Http::getLocation(std::string root, ServerBlock server) {
+//     std::vector<LocationBlock>::iterator it;
 
-    for (it = server.location.begin(); it != server.location.end(); it++) {
-        LocationBlock   &location = *it;
-        if (!location.default_root.compare(root))
-            break ;
-    }
+//     for (it = server.location.begin(); it != server.location.end(); it++) {
+//         LocationBlock   &location = *it;
+//         if (!location.default_root.compare(root))
+//             break ;
+//     }
 
-    if (it == server.location.end())
-        return *(server.location.begin());
-    return *it;
-}
+//     if (it == server.location.end())
+//         return *(server.location.begin());
+//     return *it;
+// }
 
-void    Http::checkRequestMsg(std::string method, std::string root, std::string http, std::string ver, std::string host, std::string connection) {
-    ServerBlock server = getServer(host, root);
-    LocationBlock location = getLocation(root, server);
-    bool    methods[3] = {location.methods[0], location.methods[1], location.methods[2]};
+// void    Http::checkRequestMsg(std::string method, std::string root, std::string http, std::string ver, std::string host, std::string connection) {
+//     ServerBlock server = getServer(host, root);
+//     LocationBlock location = getLocation(root, server);
+//     bool    methods[3] = {location.methods[0], location.methods[1], location.methods[2]};
 
-    if (method.compare("GET") && method.compare("POST") && method.compare("DELETE"))
-        err = 400;
-    else if (!err && !methods[GET] && !method.compare("GET") && !methods[POST] && !method.compare("POST") && !methods[DELETE] && !method.compare("DELETE"))
-        err = 405;
-    else if (!err){
-        if (location.default_root.compare(root))
-            err = 404;
-        else if (http.compare("HTTP"))
-            err = 501;
-        else if (!host.compare("65536") || server.port != ft_stoi(host))
-            err = 403;
-        else if (connection.compare("keep-alive") && connection.compare("close"))
-            err = 400;
-    }
-}
+//     if (method.compare("GET") && method.compare("POST") && method.compare("DELETE"))
+//         err = 400;
+//     else if (!err && !methods[GET] && !method.compare("GET") && !methods[POST] && !method.compare("POST") && !methods[DELETE] && !method.compare("DELETE"))
+//         err = 405;
+//     else if (!err){
+//         if (location.default_root.compare(root))
+//             err = 404;
+//         else if (http.compare("HTTP"))
+//             err = 501;
+//         else if (!host.compare("65536") || server.port != ft_stoi(host))
+//             err = 403;
+//         else if (connection.compare("keep-alive") && connection.compare("close"))
+//             err = 400;
+//     }
+// }
 
 std::string Http::buildErrorMsg(int clnt_sock) {
     std::string ret;
