@@ -194,11 +194,11 @@
 std::string Http::buildErrorMsg(int clnt_sock) {
     std::string ret;
 
-    ret += "HTTP/1.1 " + ft_to_string(err) + mime.getStatus(err) + "\r\n";
-    ret += "Connection:keep-avlive\r\n";
+    ret += "HTTP/1.1 " + ft_to_string(err) + " "+ mime.getStatus(err) + "\r\n";
+    std::cout << ret << std::endl;
+    ret += "Connection: keep-avlive\r\n";
     ret += getDate() + "\r\n";
-    ret += "Content-type:text/html\r\n";
-    ret += "Content-length" + ft_to_string(clients[clnt_sock].str_len) + "\r\n\r\n";
+    ret += "Content-type: text/html\r\n";
 
     return ret;
 }

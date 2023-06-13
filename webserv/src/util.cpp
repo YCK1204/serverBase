@@ -173,3 +173,16 @@ std::string Http::getDate() {
         dateHeader.replace(monthPos, 3, monthName);
     return dateHeader;
 }
+
+void	Http::addFdSet(int clnt_sock, fd_set &event) {
+	FD_SET(clnt_sock, &event);
+	if (clnt_sock > fd_max)
+		fd_max = clnt_sock;
+}
+
+void	Http::clearFdSet(int clnt_sock, fd_set &event) {
+	FD_CLR(clnt_sock, &event);
+	if (clnt_sock == fd_max)
+		fd_max--;
+	close(clnt_sock);
+}

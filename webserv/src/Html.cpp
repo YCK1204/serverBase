@@ -14,7 +14,7 @@ std::string Http::buildHtml(const std::string msg) {
             "<body>\n";
 	ret += "    " + msg;
 	ret += "</body>\n"
-           "</html>";
+           "</html>\r\n\r\n";
 	return ret;
 }
 

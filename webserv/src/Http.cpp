@@ -13,14 +13,6 @@ Http::Http(const std::string &path)
 }
 Http::~Http() {}
 
-void	Http::change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
-        uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
-{
-    struct kevent temp_event;
-
-    EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-    change_list.push_back(temp_event);
-}
 
 void    Http::SettingHttp() {
 	int t = 1;
@@ -86,6 +78,15 @@ void    Http::runServer()
 	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++)
 		close(it->serv_sock);
 }
+
+// void	Http::change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
+//         uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
+// {
+//     struct kevent temp_event;
+
+//     EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
+//     change_list.push_back(temp_event);
+// }
 
 /*void    Http::SettingHttp()
 {

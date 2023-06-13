@@ -163,6 +163,9 @@ private:
     void                                        printConfigInfo();
     void                                        recursive_to_string(int n, std::string &ret);
     void	                                    exception_util(const std::string &str, s_block_type type);
+    void	                                    addFdSet(int clnt_sock, fd_set &event);
+    void	                                    clearFdSet(int clnt_sock, fd_set &event);
+
 
     uint16_t                                    ft_ntohs(uint16_t port);
     bool	                                    ExistFile(std::string &root);
