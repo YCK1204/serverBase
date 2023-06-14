@@ -1,7 +1,8 @@
 #include "../header/Http.hpp"
 
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
-	clients[clnt_sock].host = 80;
+	clients[clnt_sock].keep_alive = false;
+	clients[clnt_sock].port = 80;
     clients[clnt_sock].str_len = 0;
 	clients[clnt_sock].root = "";
 	clients[clnt_sock].method = "";
@@ -10,7 +11,7 @@ void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
     clients[clnt_sock].clnt_adr = clnt_adr;
     clients[clnt_sock].last_active_times = std::time(NULL);
 	addFdSet(clnt_sock, events);
-	std::cout << "client connected : " << clnt_sock << " [" << ft_ntohs(clients[clnt_sock].clnt_adr.sin_port) << "]" << std::endl;
+	std::cout << "client connected : " << clnt_sock << std::endl;
 }
 
 void	Http::eventErrHandler(int clnt_sock) {
@@ -20,7 +21,7 @@ void	Http::eventErrHandler(int clnt_sock) {
 		server = *it;
 		if (clnt_sock == server.serv_sock) {
 			occurException(12, "socket", HTTP, CLIENT,
-			"socket error");
+			"server socket error");
 		}
 	}
 	std::cerr << "client socket error" << std::endl;
@@ -44,11 +45,10 @@ void	Http::eventReadHandler(int clnt_sock) {
 			readRequestMsg(clnt_sock);
 		}
 	}
-
 }
 
 void	Http::disconnectClient(int clnt_sock) {
-	std::cout << "client disconnected : " << clnt_sock << " [" << ft_ntohs(clients[clnt_sock].clnt_adr.sin_port) << "]"<< std::endl;
+	std::cout << "client disconnected : " << clnt_sock << std::endl;
 	clients.erase(clnt_sock);
 	clearFdSet(clnt_sock, events);
 }
@@ -68,15 +68,11 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
 	fcntl(clnt_sk, F_SETFL, O_NONBLOCK);
 	if (fd_max < clnt_sk)
 		fd_max = clnt_sk;
-
-	// change_events(changeList, clnt_sk, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 }
 
 void Http::readRequestMsg(int clnt_sock) {
     ssize_t n;
-    int sock;
 
-    sock = clnt_sock;
     char* buf = new char[BUF_SIZE];
     n = read(clnt_sock, buf, BUF_SIZE);
     if (n == -1) {
@@ -86,10 +82,6 @@ void Http::readRequestMsg(int clnt_sock) {
         clients[clnt_sock].request += buf;
         clients[clnt_sock].str_len += n;
         clients[clnt_sock].last_active_times = std::time(NULL);
-        size_t len = clients[clnt_sock].request.length();
-        if (len > 3 && !clients[clnt_sock].request.substr(len - 3).compare("\r\n\r")) {
-            writeResponse(clnt_sock);
-        }
     }
     delete[] buf;
 }
@@ -125,19 +117,11 @@ void	Http::clientHandler() {
 			eventErrHandler(i);
 		else if (FD_ISSET(i, &read_event))
 			eventReadHandler(i);
+		else if (FD_ISSET(i, &write_event))
+			writeResponse(i);
+		if (clients.find(i) != clients.end()) {
+			if (clients[i].keep_alive && (std::time(NULL) - clients[i].last_active_times) > OUTTIME)
+				disconnectClient(i);
+		}
 	}
 }
-
-/*void	Http::clientHandler() {
-
-	for (int i = 0; i < nevents; i++) {
-		curr_event = &evlist[i];
-		std::cout << "filter : " << curr_event->filter << std::endl;
-		if (curr_event->flags & EV_ERROR)
-			eventErrHandler(curr_event->ident);
-		else if (curr_event->filter == EVFILT_READ)
-			eventReadHandler(curr_event->ident);
-		else if (curr_event->filter == EVFILT_WRITE)
-			writeResponse(curr_event->ident);
-	}
-}*/

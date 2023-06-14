@@ -30,6 +30,7 @@
 #define LISTEN_SIZE 20
 #define BUF_SIZE 2
 #define MAX_EVENTS 100
+#define OUTTIME 10
 
 enum files {
     F_HTTP,
@@ -103,11 +104,12 @@ typedef struct {
 }	ServerBlock;
 
 typedef struct {
-    int                                         host;
+    int                                         port;
     std::string                                 root;
     std::string                                 method;
     std::string                                 request;
     std::string                                 http_ver;
+    bool                                        keep_alive;
     struct sockaddr_in                          clnt_adr;
     ssize_t                                     str_len;
     std::time_t                                 last_active_times;
@@ -115,12 +117,10 @@ typedef struct {
 
 class Http {
 private:
-    fd_set                                      events, read_event, err_event;
+    fd_set                                      events, read_event, write_event, err_event;
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         kq, nevents, err, fd_max;
-	struct kevent                               evlist[MAX_EVENTS];
-	struct kevent                               *curr_event;
+    int                                         err, fd_max;
     Mime                                        mime;
     std::vector<struct kevent>                  changeList;
 
