@@ -15,8 +15,8 @@ private:
 public:
     Mime();
     ~Mime();
-    std::string &getStatus(const int &n);
-    std::string &getType(const std::string &type);
+    std::string getStatus(const int &n);
+    std::string getType(const std::string &type);
 };
 
 #endif

@@ -26,3 +26,14 @@ std::string Http::buildErrorHtml(const int status) {
     ret = buildHtml(msg);
     return ret;
 }
+
+std::string Http::buildErrorMsg(int clnt_sock) {
+    std::string ret;
+
+    ret += "HTTP/1.1 " + ft_to_string(err) + " "+ mime.getStatus(err) + "\r\n";
+    ret += "Connection: keep-alive\r\n";
+    ret += getDate() + "\r\n";
+    ret += "Content-type: text/html\r\n";
+
+    return ret;
+}

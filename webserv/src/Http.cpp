@@ -31,7 +31,7 @@ void    Http::SettingHttp() {
 				serverFunctionExecuteFailed(24, "socket())");
 			std::memset(&it->serv_adr, 0, sizeof(it->serv_adr));
 			it->serv_adr.sin_family = AF_INET;
-			it->serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+			it->serv_adr.sin_addr.s_addr = inet_addr(it->host.c_str());
 			it->serv_adr.sin_port = htons(it->port);
 			if ((setsockopt(it->serv_sock, SOL_SOCKET, SO_REUSEADDR, &t, sizeof(t))) == -1)
 				serverFunctionExecuteFailed(24, "setsockopt()");
@@ -54,7 +54,7 @@ void	Http::initializeServer() {
 			}
 		}
 		if (!serverOverlap) {
-			if ((listen(it->serv_sock, 20)) == -1)
+			if ((listen(it->serv_sock, LISTEN_SIZE)) == -1)
 				serverFunctionExecuteFailed(47, "listen()");
 			FD_SET(it->serv_sock, &events);
 			if (fcntl(it->serv_sock, F_SETFL, O_NONBLOCK) == -1)

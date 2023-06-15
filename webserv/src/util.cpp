@@ -41,7 +41,7 @@ int Http::ft_stoi(const std::string &str) {
 		if (str[i] == '.')
 			continue ;
         if (!('0' <= str[i] && str[i] <= '9') || ret < 0) {
-			return 0;
+			break ;
 		}
 		ret *= 10;
 		ret += str[i] - '0';
@@ -185,4 +185,112 @@ void	Http::clearFdSet(int clnt_sock, fd_set &event) {
 	if (clnt_sock == fd_max)
 		fd_max--;
 	close(clnt_sock);
+}
+
+std::string    Http::spaceTrim(std::string str) {
+    int start, end;
+    for (start = 0; str[start]; start++) {
+        if (str[start] != ' ')
+            break ;
+    }
+    for (end = str.length() - 1; end > 0; end--) {
+        if (str[end] != ' ')
+            break ;
+    }
+    return str.substr(start, end - start + 1);
+}
+
+bool	Http::checkValidateAddress(int addr[4]) {
+	int validAddr[3][4], err = 1;
+
+	for (int i = 0; i < 4; i++) {
+		if (addr[i] > 255 || addr[i] < 0) {
+			return true ;
+		}
+	}
+	validAddr[0][0] = 0;
+	validAddr[0][1] = 0;
+	validAddr[0][2] = 0;
+	validAddr[0][3] = 0;
+
+	validAddr[1][0] = 127;
+	validAddr[1][1] = 0;
+	validAddr[1][2] = 0;
+	validAddr[1][3] = 1;
+
+	validAddr[2][0] = 10;
+	validAddr[2][1] = 31;
+	validAddr[2][2] = 1;
+	validAddr[2][3] = 4;
+	for (int i = 0; i < 3; i++)
+	{
+		if (addr[0] == validAddr[i][0] && addr[1] == validAddr[i][1] && \
+			addr[2] == validAddr[i][2] && addr[3] == validAddr[i][3]
+		)
+			err = 0;
+	}
+	if (err) {
+		return true ;
+	}
+	return false;
+}
+
+ServerBlock Http::getServer(std::string host, std::string root) {
+    int     port = ft_stoi(host);
+    bool    f = false;
+    std::vector<ServerBlock>::iterator it;
+
+    for (it = this->server.begin(); it != this->server.end(); it++) {
+        ServerBlock &server = *it;
+        if (server.port == port) { // 포트가 같을 때
+            for (std::vector<LocationBlock>::iterator it = server.location.begin(); it != server.location.end(); it++) {
+                LocationBlock &location = *it;
+                if (!location.default_root.compare(root)) { // 루트 발견
+                    f = true;
+                    break ;
+                }
+            }
+        }
+        if (f)
+            break ;
+    }
+    if (it == this->server.end()) { // 루트가 없을 때
+        for (it = this->server.begin(); it != this->server.end(); it++) {
+            ServerBlock &server = *it;
+            if (server.port == port)
+                break ;
+        }
+    }
+
+    if (it == this->server.end())  // 포트가 이상할 때
+        return *(this->server.begin());
+    return *it;
+}
+
+LocationBlock    Http::getLocation(std::string root, ServerBlock server) {
+    std::vector<LocationBlock>::iterator it;
+
+    for (it = server.location.begin(); it != server.location.end(); it++) {
+        LocationBlock   &location = *it;
+        if (!location.default_root.compare(root))
+            break ;
+    }
+
+    if (it == server.location.end())
+        return *(server.location.begin());
+    return *it;
+}
+
+std::string Http::getIndexRoot(ServerBlock server, LocationBlock location) {
+    std::string ret;
+
+    if (location.root.empty())
+        ret += server.root;
+    else
+        ret += location.root;
+    if (location.index.empty())
+        ret += server.index;
+    else
+        ret += location.index;
+    return ret;
 }

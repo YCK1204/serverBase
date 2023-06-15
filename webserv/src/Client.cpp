@@ -1,13 +1,14 @@
 #include "../header/Http.hpp"
 
 void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
-	clients[clnt_sock].keep_alive = false;
 	clients[clnt_sock].port = 80;
     clients[clnt_sock].str_len = 0;
 	clients[clnt_sock].root = "";
 	clients[clnt_sock].method = "";
     clients[clnt_sock].request = "";
 	clients[clnt_sock].http_ver = "";
+	clients[clnt_sock].connection = "";
+	clients[clnt_sock].file_extension = "";
     clients[clnt_sock].clnt_adr = clnt_adr;
     clients[clnt_sock].last_active_times = std::time(NULL);
 	addFdSet(clnt_sock, events);
@@ -29,7 +30,7 @@ void	Http::eventErrHandler(int clnt_sock) {
 }
 
 void	Http::eventReadHandler(int clnt_sock) {
-	bool	t = false;
+	bool				t = false;
 	ServerBlock			server;
 
 	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
@@ -89,24 +90,23 @@ void Http::readRequestMsg(int clnt_sock) {
 void	Http::writeResponse(int clnt_sock) {
 	std::pair<std::string, std::string>	response;
 
-	std::cout << "clnt sock : " << clnt_sock << std::endl;
-	std::cout << "req_msg : " << clients[clnt_sock].request << std::endl;
+	err = 0;
+	status = 200;
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
-			err = 0;
-		err = 404;
-		response.first = buildErrorMsg(clnt_sock);
-		response.second = buildErrorHtml(404);
-		response.first += "Content-length: " + ft_to_string(response.second.length()) + "\r\n\r\n";
-		if ((write(clnt_sock, response.first.c_str(), response.first.length())) == -1)
-			std::cerr << "Error : write error (response msg)" << std::endl;
-		else
-			std::cout << "write Successe (response msg)" << std::endl;
-		if ((write(clnt_sock, response.second.c_str(), response.second.length())) == -1)
-			std::cerr << "Error : write error (response content)" << std::endl;
-		else
-			std::cout << "write Successe (response content)" << std::endl;
-		disconnectClient(clnt_sock);
+			response = getResponse(clnt_sock);
+
+			if ((write(clnt_sock, response.first.c_str(), response.first.length())) == -1)
+				std::cerr << "Error : write error (response msg)" << std::endl;
+			if ((write(clnt_sock, response.second.c_str(), response.second.length())) == -1)
+				std::cerr << "Error : write error (response content)" << std::endl;
+			std::cout << "Responsed client : " << clnt_sock << ", status=[";
+			if (err != 0)
+				std::cout << ft_to_string(err);
+			else
+				std::cout << ft_to_string(status);
+			std::cout << "]" << std::endl;
+			disconnectClient(clnt_sock);
 		}
 	}
 }
@@ -120,7 +120,7 @@ void	Http::clientHandler() {
 		else if (FD_ISSET(i, &write_event))
 			writeResponse(i);
 		if (clients.find(i) != clients.end()) {
-			if (clients[i].keep_alive && (std::time(NULL) - clients[i].last_active_times) > OUTTIME)
+			if (!clients[i].connection.compare("keep-avlie") && (std::time(NULL) - clients[i].last_active_times) > OUTTIME)
 				disconnectClient(i);
 		}
 	}

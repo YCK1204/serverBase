@@ -29,8 +29,8 @@
 
 #define LISTEN_SIZE 20
 #define BUF_SIZE 2
-#define MAX_EVENTS 100
 #define OUTTIME 10
+#define MAX_ROOT_LEN 30
 
 enum files {
     F_HTTP,
@@ -91,13 +91,16 @@ typedef struct {
 
 typedef struct {
     struct sockaddr_in                          serv_adr;
+
     std::vector<LocationBlock>                  location;
+    
 	std::string					                root;
     std::string                                 host;
     std::string					                index;
     std::string                                 error_page;
-	std::string					                server_name;
     std::string                                 index_root;
+	std::string					                server_name;
+
     int                                         port;
     int                                         serv_sock;
 	int   		            	                client_body_size;
@@ -105,13 +108,18 @@ typedef struct {
 
 typedef struct {
     int                                         port;
+    int                                         addr[4];
+
     std::string                                 root;
+    std::string                                 http;
     std::string                                 method;
     std::string                                 request;
     std::string                                 http_ver;
-    bool                                        keep_alive;
-    struct sockaddr_in                          clnt_adr;
+    std::string                                 connection;
+    std::string                                 file_extension;
+
     ssize_t                                     str_len;
+    struct sockaddr_in                          clnt_adr;
     std::time_t                                 last_active_times;
 }   ClientData;
 
@@ -120,7 +128,7 @@ private:
     fd_set                                      events, read_event, write_event, err_event;
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
-    int                                         err, fd_max;
+    int                                         err, fd_max, status;
     Mime                                        mime;
     std::vector<struct kevent>                  changeList;
 
@@ -148,7 +156,6 @@ private:
     void	                                    checkEmptyFile(const std::string &path);
     void	                                    checkValidAddr(const std::string &host);
     void                                        buildLocationOption(std::stringstream &ss, bool types[3]);
-    void	                                    checkValidateAddress(int addr[4], const std::string &host);
     void                                        setServerOption(std::ifstream &file, std::stringstream &ss, std::string cmd, ServerBlock &ret, int types[7]);
 
     int                                         distinctionMethods(std::string &method);
@@ -156,28 +163,33 @@ private:
     /* parsing_functions*/
 
     /* util_functions */
+    ServerBlock                                 getServer(std::string host, std::string root);
+    LocationBlock                               getLocation(std::string root, ServerBlock server);
+
     std::string                                 getDate();
     std::string                                 ft_to_string(int n);
+    std::string                                 spaceTrim(std::string str);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
 
     void                                        printConfigInfo();
-    void                                        recursive_to_string(int n, std::string &ret);
-    void	                                    exception_util(const std::string &str, s_block_type type);
     void	                                    addFdSet(int clnt_sock, fd_set &event);
     void	                                    clearFdSet(int clnt_sock, fd_set &event);
-
+    void                                        recursive_to_string(int n, std::string &ret);
+    void	                                    exception_util(const std::string &str, s_block_type type);
 
     uint16_t                                    ft_ntohs(uint16_t port);
+
     bool	                                    ExistFile(std::string &root);
-    int                                         ft_stoi(const std::string &str);
+    bool	                                    checkValidateAddress(int addr[4]);
     bool	                                    ExistDirectory(std::string &root);
+
+    int                                         ft_stoi(const std::string &str);
     int                                         ft_stoi(const std::string &str, s_block_type type);
     /* util_functions */
 
     /* server_functions */
     void                                        runServer();
     void                                        SettingHttp();
-    void	                                    change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
     void	                                    initializeServer();
     /* server_functions */
 
@@ -185,43 +197,36 @@ private:
     void	                                    clientHandler();
     void	                                    writeResponse(int clnt_sock);
     void	                                    readRequestMsg(int clnt_sock);
-    void	                                    disconnectClient(int clnt_sock);
     void	                                    eventErrHandler(int clnt_sock);
+    void	                                    eventReadHandler(int clnt_sock);
+    void	                                    disconnectClient(int clnt_sock);
     void                                        clientInit(struct sockaddr_in clnt_adr, int clnt_sock);
     void	                                    clientAccept(int serv_sock, int clnt_sock, ServerBlock &server);
-    void	                                    eventReadHandler(int clnt_sock);
     /* client_functions*/
 
     /* html_functions*/
+    std::string                                 buildErrorMsg(int clnt_sock);
     std::string                                 buildHtml(const std::string msg);
     std::string                                 buildErrorHtml(const int status);
     /* html_functions*/
 
     /* response_functions */
-    ServerBlock                                 getServer(std::string host, std::string root);
-    LocationBlock                               getLocation(std::string root, ServerBlock server);
-
-    std::string                                 getMsg(int clnt_sock);
-    std::string                                 getContent(int clnt_sock);
-    std::string                                 buildErrorMsg(int clnt_sock);
-    std::string                                 getRoot(std::string req_msg);
-    std::string                                 getHTTP(std::string req_msg);
-    std::string                                 getHost(std::string req_msg);
-    std::string                                 getMethod(std::string req_msg);
-    std::string                                 getHttpVer(std::string req_msg);
-    std::string                                 getConnection(std::string req_msg);
-    std::string                                 getResponseLine(std::string req_msg);
-    std::string                                 getResponseBody(std::string req_msg);
-    std::string                                 getResponseHeader(std::string req_msg);
     std::pair<std::string, std::string>         getResponse(int clnt_sock);
 
-    void                                        checkRequestMsg(std::string method, std::string root, std::string http, std::string ver, std::string host, std::string connection);
+    std::string                                 getMsg(int clnt_sock, int length);
+    std::string                                 getContent(int clnt_sock);
+    std::string                                 getRoot(std::string req_msg);
+    std::string                                 getHTTP(std::string req_msg);
+    std::string                                 getPort(std::string req_msg);
+    std::string                                 getMethod(std::string req_msg);
+    std::string                                 getAddress(std::string req_msg);
+    std::string                                 getHttpVer(std::string req_msg);
+    std::string                                 getConnection(std::string req_msg);
+    std::string                                 buildAutoindex(std::string dir_root);
+    std::string                                 getIndexRoot(ServerBlock server, LocationBlock location);
 
-    std::string                                 makeAutoindex(std::string root);
-    std::pair<std::string, std::string>         makeResponse(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, char *msg);
-    std::string                                 readFile(std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt, std::string &msg);
-    std::string                                 setResponseLine(std::vector<std::pair<std::string, LocationBlock> >::iterator &location, std::vector<std::pair<unsigned short, ServerBlock> >::iterator server, size_t const &ResponseCode, std::string msg);
-    std::string                                 checkValidRequestLine(std::string &method, std::string &root, std::string &http_ver, std::string &temp, std::vector<std::pair<unsigned short, ServerBlock> >::iterator it, std::vector<std::pair<std::string, LocationBlock> >::iterator itt);
+    void                                        getData(int clnt_sock);
+    void                                        checkRequestMsg(int clnt_sock);
     /* response_functions */
     
 

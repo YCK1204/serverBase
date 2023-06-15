@@ -80,50 +80,16 @@ void	Http::checkValidAddr(const std::string &host) {
 		occurException(62, host, CONFIG, PARSING,
 		"is not valid server address (xxx.xxx.xxx.xxx)");
 	}
-	checkValidateAddress(addr, host);
-}
-
-void	Http::checkValidateAddress(int addr[4], const std::string &host) {
-	int validAddr[3][4], err = 1;
-
-	for (int i = 0; i < 4; i++) {
-		if (addr[i] > 255) {
-			occurException(86, host, CONFIG, PARSING,
-			"is not valid server address (one octet 0 ~ 255)");
-		}
-	}
-	validAddr[0][0] = 0;
-	validAddr[0][1] = 0;
-	validAddr[0][2] = 0;
-	validAddr[0][3] = 0;
-
-	validAddr[1][0] = 127;
-	validAddr[1][1] = 0;
-	validAddr[1][2] = 0;
-	validAddr[1][3] = 1;
-
-	validAddr[2][0] = 10;
-	validAddr[2][1] = 31;
-	validAddr[2][2] = 5;
-	validAddr[2][3] = 2;
-	for (int i = 0; i < 3; i++)
-	{
-		if (addr[0] == validAddr[i][0] && addr[1] == validAddr[i][1] && \
-			addr[2] == validAddr[i][2] && addr[3] == validAddr[i][3]
-		)
-			err = 0;
-	}
-	if (err) {
-		occurException(86, host, CONFIG, PARSING,
+	if (checkValidateAddress(addr))
+		occurException(83, host, CONFIG, PARSING,
 		"can not use server address");
-	}
 }
 
 void	Http::checkValidConfig() {
 	for (std::vector<ServerBlock>::iterator it = server.begin(); it != server.end(); it++) {
 		ServerBlock &server = *it;
 		if (server.port > 65535) {
-			occurException(125, "listen", CONFIG, PARSING,
+			occurException(91, "listen", CONFIG, PARSING,
 			"can not use server port");
 		}
 		checkValidAddr(it->host);
@@ -132,7 +98,7 @@ void	Http::checkValidConfig() {
 				if (itt == ittt)
 					continue ;
 				if (!itt->default_root.compare(ittt->default_root)) {
-					occurException(134, itt->default_root, CONFIG, PARSING,
+					occurException(100, itt->default_root, CONFIG, PARSING,
 					"overlap location block");
 				}
 			}

@@ -165,16 +165,16 @@ Mime::Mime() {
 }
 Mime::~Mime() {}
 
-std::string &Mime::getStatus(const int &n) {
+std::string Mime::getStatus(const int &n) {
     std::map<int, std::string>::iterator it = this->status.find(n);
     if (it == this->status.end())
         it = this->status.find(404);
     return (it->second);
 }
 
-std::string &Mime::getType(const std::string &type) {
+std::string Mime::getType(const std::string &type) {
     std::map<std::string, std::string>::iterator it = this->type.find(type);
     if (it == this->type.end())
-        it = this->type.find("html");
+        return "application/octet-stream";
     return (this->type.find(type)->second);
 }
