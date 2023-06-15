@@ -29,7 +29,7 @@
 
 #define LISTEN_SIZE 20
 #define BUF_SIZE 2
-#define OUTTIME 10
+#define TIMEOUT 10
 #define MAX_ROOT_LEN 30
 
 enum files {
@@ -120,6 +120,7 @@ typedef struct {
 
     ssize_t                                     str_len;
     struct sockaddr_in                          clnt_adr;
+    bool                                        autoindex;
     std::time_t                                 last_active_times;
 }   ClientData;
 
@@ -233,7 +234,7 @@ private:
     std::string                                 getHttpVer(std::string req_msg);
     std::string                                 getConnection(std::string req_msg);
     std::string                                 buildAutoindex(std::string dir_root);
-    std::string                                 getIndexRoot(ServerBlock server, LocationBlock location);
+    std::string                                 getIndexRoot(ServerBlock server, LocationBlock location, int clnt_sock);
 
     void                                        getData(int clnt_sock);
     void                                        checkRequestMsg(int clnt_sock);
