@@ -123,6 +123,13 @@ typedef struct {
     std::time_t                                 last_active_times;
 }   ClientData;
 
+struct FileInfo {
+    std::string                                 name;
+    off_t                                       size;
+    time_t                                      lastModified;
+    bool                                        is_dir;
+};
+
 class Http {
 private:
     fd_set                                      events, read_event, write_event, err_event;
@@ -168,8 +175,10 @@ private:
 
     std::string                                 getDate();
     std::string                                 ft_to_string(int n);
+    std::string                                 formatSize(double size);
     std::string                                 spaceTrim(std::string str);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
+    std::string                                 formatTime(const time_t& time);
 
     void                                        printConfigInfo();
     void	                                    addFdSet(int clnt_sock, fd_set &event);
@@ -182,6 +191,7 @@ private:
     bool	                                    ExistFile(std::string &root);
     bool	                                    checkValidateAddress(int addr[4]);
     bool	                                    ExistDirectory(std::string &root);
+    // bool                                        compareFiles(const FileInfo& file1, const FileInfo& file2);
 
     int                                         ft_stoi(const std::string &str);
     int                                         ft_stoi(const std::string &str, s_block_type type);

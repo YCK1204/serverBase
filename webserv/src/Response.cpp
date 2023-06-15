@@ -118,9 +118,7 @@ std::string Http::getMsg(int clnt_sock, int length) {
     return ret;
 }
 
-std::string Http::buildAutoindex(std::string dir_root) {
-    return "";
-}
+
 
 std::string Http::getContent(int clnt_sock) {
     ServerBlock     server      = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
@@ -129,7 +127,7 @@ std::string Http::getContent(int clnt_sock) {
     std::ifstream   file;
     std::size_t     len;
 
-    clients[clnt_sock].file_extension = "text/html";
+    clients[clnt_sock].file_extension = "html";
     if (location.autoindex) {
         status = 200;
         return buildAutoindex(server.root + location.default_root.substr(1));
