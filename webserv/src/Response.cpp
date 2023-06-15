@@ -101,13 +101,16 @@ std::string Http::getConnection(std::string req_msg) {
 
 
 std::string Http::getMsg(int clnt_sock, int length) {
-    std::string ret, req_msg = clients[clnt_sock].request;
-    ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
+    std::string     ret, req_msg = clients[clnt_sock].request;
+    ServerBlock     server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
+    LocationBlock   location = getLocation(clients[clnt_sock].root, server);
 
     ret += "HTTP/1.1 " + ft_to_string(status) + mime.getStatus(status) + "\r\n";
     ret += "Connection: " + clients[clnt_sock].connection + "\r\n";
     ret += "Content-length: " + ft_to_string(length) + "\r\n";
     ret += "Content-type: " + mime.getType(clients[clnt_sock].file_extension) + "\r\n";
+    if (location.ret)
+        ret += "Location: " + location.redirect + "\r\n";
     ret += getDate() + "\r\n";
     if (!clients[clnt_sock].connection.compare("keep-alive"))
         ret += "keep-alive: timeout=" + ft_to_string(OUTTIME) + ", max=" + ft_to_string(LISTEN_SIZE) + "\r\n";
@@ -193,6 +196,7 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
     if (err) {
         ret.first   = buildErrorMsg(clnt_sock);
         ret.second  = buildErrorHtml(err);
+        ret.first += "Content-length: " + ft_to_string(ret.second.length()) + "\r\n\r\n";
     }
     else {
         ret.second  = getContent(clnt_sock);
