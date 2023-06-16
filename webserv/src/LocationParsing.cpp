@@ -48,6 +48,10 @@ LocationBlock Http::makeLocation(std::ifstream &file, std::stringstream &ss) {
         occurException(47, "", CONFIG, L_PARSING,
         "location is not finished \"}\"");
     }
+    if (ret.autoindex) {
+        for (int i = 0; i < 3; i++)
+            ret.methods[i] = true;
+    }
     return ret;
 }
 

@@ -101,9 +101,10 @@ std::string Http::getConnection(std::string req_msg) {
 
 
 std::string Http::getMsg(int clnt_sock, int length) {
-    std::string     ret, req_msg = clients[clnt_sock].request;
+    std::string     ret, file_path, req_msg = clients[clnt_sock].request;
     ServerBlock     server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
     LocationBlock   location = getLocation(clients[clnt_sock].root, server);
+    struct stat file_stat;
 
     ret += "HTTP/1.1 " + ft_to_string(status) + mime.getStatus(status) + "\r\n";
     ret += "Connection: " + clients[clnt_sock].connection + "\r\n";
@@ -114,6 +115,9 @@ std::string Http::getMsg(int clnt_sock, int length) {
     ret += getDate() + "\r\n";
     if (!clients[clnt_sock].connection.compare("keep-alive"))
         ret += "keep-alive: timeout=" + ft_to_string(TIMEOUT) + ", max=" + ft_to_string(LISTEN_SIZE) + "\r\n";
+    file_path = getIndexRoot(server, location, clnt_sock);
+    if (stat(file_path.c_str(), &file_stat) >= 0)
+        ret += "Last-Modified: " + formatTime(file_stat.st_mtime) + "\r\n";
     ret += "Server: " + server.server_name + "\r\n\r\n";
     return ret;
 }
@@ -128,10 +132,8 @@ std::string Http::getContent(int clnt_sock) {
     clients[clnt_sock].file_extension = "html";
     if (location.autoindex) {
         status = 200;
-        clients[clnt_sock].autoindex = true;
         return buildAutoindex(server.root + location.default_root.substr(1));
     }
-    clients[clnt_sock].autoindex = false;
     if (location.ret) {
         status = 301;
         return "";
@@ -147,8 +149,6 @@ std::string Http::getContent(int clnt_sock) {
         len = file_root.rfind(".");
         if (len != std::string::npos)
             clients[clnt_sock].file_extension = file_root.substr(len + 1);
-        else
-            clients[clnt_sock].file_extension = "html";
     }
     else
         err = 404;
@@ -223,7 +223,7 @@ void    Http::checkRequestMsg(int clnt_sock) {
     else if (!err){
         if (root.length() > MAX_ROOT_LEN)
             err = 414;
-        else if (!clients[clnt_sock].autoindex && location.default_root.compare(root))
+        else if (location.default_root.compare(root))
             err = 404;
         else if (clients[clnt_sock].http.compare("HTTP"))
             err = 501;

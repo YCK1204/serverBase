@@ -1,19 +1,15 @@
 #include "../header/Http.hpp"
 
-void    Http::clientInit(struct sockaddr_in clnt_adr, int clnt_sock) {
+void    Http::clientInit(int clnt_sock) {
 	clients[clnt_sock].port					= 80;
     clients[clnt_sock].str_len				= 0;
 	clients[clnt_sock].root					= "";
 	clients[clnt_sock].method				= "";
     clients[clnt_sock].request				= "";
 	clients[clnt_sock].http_ver				= "";
-	clients[clnt_sock].connection			= "keep-alive";
+	clients[clnt_sock].connection			= "";
 	clients[clnt_sock].file_extension		= "";
-	clients[clnt_sock].autoindex			= false;
-    clients[clnt_sock].clnt_adr				= clnt_adr;
     clients[clnt_sock].last_active_times	= std::time(NULL);
-	addFdSet(clnt_sock, events);
-	std::cout << "client connected : " << clnt_sock << std::endl;
 }
 
 void	Http::eventErrHandler(int clnt_sock) {
@@ -66,10 +62,10 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
         occurException(44, "accept()", HTTP, CLIENT,
         "accept function error");
     }
-    clientInit(clnt_adr, clnt_sk);
+    clientInit(clnt_sk);
+	addFdSet(clnt_sk, events);
 	fcntl(clnt_sk, F_SETFL, O_NONBLOCK);
-	if (fd_max < clnt_sk)
-		fd_max = clnt_sk;
+	std::cout << "client connected : " << clnt_sk << std::endl;
 }
 
 void Http::readRequestMsg(int clnt_sock) {
@@ -96,21 +92,22 @@ void	Http::writeResponse(int clnt_sock) {
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
 			response = getResponse(clnt_sock);
-
 			if ((write(clnt_sock, response.first.c_str(), response.first.length())) == -1)
 				std::cerr << "Error : write error (response msg)" << std::endl;
 			if ((write(clnt_sock, response.second.c_str(), response.second.length())) == -1)
 				std::cerr << "Error : write error (response content)" << std::endl;
+
 			std::cout << "Response to client : " << clnt_sock << ", status=[";
 			if (err != 0)
 				std::cout << ft_to_string(err);
 			else
 				std::cout << ft_to_string(status);
 			std::cout << "]" << std::endl;
+
 			if (!clients[clnt_sock].connection.compare("close"))
 				disconnectClient(clnt_sock);
 			else
-				clients[clnt_sock].request.clear();
+				clientInit(clnt_sock);
 		}
 	}
 }

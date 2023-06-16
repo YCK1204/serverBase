@@ -119,8 +119,6 @@ typedef struct {
     std::string                                 file_extension;
 
     ssize_t                                     str_len;
-    struct sockaddr_in                          clnt_adr;
-    bool                                        autoindex;
     std::time_t                                 last_active_times;
 }   ClientData;
 
@@ -192,7 +190,6 @@ private:
     bool	                                    ExistFile(std::string &root);
     bool	                                    checkValidateAddress(int addr[4]);
     bool	                                    ExistDirectory(std::string &root);
-    // bool                                        compareFiles(const FileInfo& file1, const FileInfo& file2);
 
     int                                         ft_stoi(const std::string &str);
     int                                         ft_stoi(const std::string &str, s_block_type type);
@@ -211,7 +208,7 @@ private:
     void	                                    eventErrHandler(int clnt_sock);
     void	                                    eventReadHandler(int clnt_sock);
     void	                                    disconnectClient(int clnt_sock);
-    void                                        clientInit(struct sockaddr_in clnt_adr, int clnt_sock);
+    void                                        clientInit(int clnt_sock);
     void	                                    clientAccept(int serv_sock, int clnt_sock, ServerBlock &server);
     /* client_functions*/
 

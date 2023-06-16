@@ -242,10 +242,10 @@ ServerBlock Http::getServer(std::string host, std::string root) {
 
     for (it = this->server.begin(); it != this->server.end(); it++) {
         ServerBlock &server = *it;
-        if (server.port == port) { // 포트가 같을 때
+        if (server.port == port) {
             for (std::vector<LocationBlock>::iterator it = server.location.begin(); it != server.location.end(); it++) {
                 LocationBlock &location = *it;
-                if (!location.default_root.compare(root)) { // 루트 발견
+                if (!location.default_root.compare(root)) {
                     f = true;
                     break ;
                 }
@@ -254,15 +254,8 @@ ServerBlock Http::getServer(std::string host, std::string root) {
         if (f)
             break ;
     }
-    if (it == this->server.end()) { // 루트가 없을 때
-        for (it = this->server.begin(); it != this->server.end(); it++) {
-            ServerBlock &server = *it;
-            if (server.port == port)
-                break ;
-        }
-    }
-
-    if (it == this->server.end())  // 포트가 이상할 때
+    for (it = this->server.begin(); it != this->server.end() && port != it->port; it++)
+    if (it == this->server.end())
         return *(this->server.begin());
     return *it;
 }

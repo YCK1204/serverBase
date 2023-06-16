@@ -37,11 +37,11 @@ void	Http::serverFunctionExecuteFailed(const int line, std::string msg, std::str
 	occurException(line, msg, HTTP, F_HTTP, detail);
 }
 
-const char *Http::EmptyFileException::				what() const throw() { return ("Error : Empty File");}
-const char *Http::NoSuchFileException::				what() const throw() { return ("Error : No Such File");}
-const char *Http::ServerPortOverlapException::		what() const throw() { return ("Error : Server Port Overlap");}
-const char *Http::notValidAddrException::			what() const throw() { return ("Error : Is Not Valid Address");}
-const char *Http::NotValidConfigFileException::		what() const throw() { return ("Error : Not Valid Configuration File");}
-const char *Http::SettingHttpException::			what() const throw() { return ("Error : Fail Server Setting function");}
-const char *Http::LocationRootOverlapException::	what() const throw() { return ("Error : Location Block Default Root Overlap");}
-const char *Http::RunServerException::				what() const throw() { return ("Error : Occured Exception During Run Server");}
+const char *Http::EmptyFileException				::what() const throw() { return ("Error : Empty File");}
+const char *Http::NoSuchFileException				::what() const throw() { return ("Error : No Such File");}
+const char *Http::ServerPortOverlapException		::what() const throw() { return ("Error : Server Port Overlap");}
+const char *Http::notValidAddrException				::what() const throw() { return ("Error : Is Not Valid Address");}
+const char *Http::NotValidConfigFileException		::what() const throw() { return ("Error : Not Valid Configuration File");}
+const char *Http::SettingHttpException				::what() const throw() { return ("Error : Fail Server Setting function");}
+const char *Http::LocationRootOverlapException		::what() const throw() { return ("Error : Location Block Default Root Overlap");}
+const char *Http::RunServerException				::what() const throw() { return ("Error : Occured Exception During Run Server");}
