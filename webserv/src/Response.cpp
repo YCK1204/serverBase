@@ -13,7 +13,10 @@ std::string Http::getRoot(std::string req_msg) {
     std::string         tmp, ret;
 
     ss >> tmp >> ret;
-    return spaceTrim(ret);
+    ret = spaceTrim(ret);
+    if (ret.length() > 1 && ret[ret.length() - 1] == '/')
+        ret = ret.substr(0, ret.length() - 1);
+    return ret;
 }
 
 std::string Http::getHTTP(std::string req_msg) {
@@ -99,7 +102,6 @@ std::string Http::getConnection(std::string req_msg) {
 }
 /* header */
 
-
 std::string Http::getMsg(int clnt_sock, int length) {
     std::string     ret, file_path, req_msg = clients[clnt_sock].request;
     ServerBlock     server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
@@ -122,38 +124,121 @@ std::string Http::getMsg(int clnt_sock, int length) {
     return ret;
 }
 
-std::string Http::getContent(int clnt_sock) {
-    ServerBlock     server      = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
-    LocationBlock   location    = getLocation(clients[clnt_sock].root, server);
-    std::string     ret, file_root, line;
-    std::ifstream   file;
-    std::size_t     len;
+// std::string Http::getContent(int clnt_sock) {
+//     ServerBlock     server      = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
+//     LocationBlock   location    = getLocation(clients[clnt_sock].root, server);
+//     std::string     ret, file_root, line;
+//     std::ifstream   file;
+//     std::size_t     len;
 
-    clients[clnt_sock].file_extension = "html";
-    if (location.autoindex) {
-        status = 200;
-        return buildAutoindex(server.root + location.default_root.substr(1));
+//     clients[clnt_sock].file_extension = "html";
+//     if (location.autoindex) {
+//         status = 200;
+//         return buildAutoindex(server.root + location.default_root.substr(1));
+//     }
+//     if (location.ret) {
+//         status = 301;
+//         return "";
+//     }
+//     file_root = getIndexRoot(server, location, clnt_sock);
+//     file.open(file_root.c_str());
+//     if (file.is_open()) {
+//         while (std::getline(file, line)) {
+//             ret += line;
+//             line.clear();
+//         }
+//         status = 200;
+//         len = file_root.rfind(".");
+//         if (len != std::string::npos)
+//             clients[clnt_sock].file_extension = file_root.substr(len + 1);
+//     }
+//     else
+//         err = 404;
+//     return ret;
+// }
+
+bool    Http::isAutoindex(int clnt_sock) {
+    bool    ret = false;
+    ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
+    LocationBlock location = getLocation(clients[clnt_sock].root, server);
+
+    if (!std::strncmp(location.default_root.c_str(), clients[clnt_sock].root.c_str(), location.default_root.length())) {
+        if (location.autoindex)
+            ret = true;
     }
-    if (location.ret) {
-        status = 301;
-        return "";
+    else if (!location.default_root.compare(clients[clnt_sock].root)) {
+        if (location.autoindex)
+            ret = true;
     }
-    file_root = getIndexRoot(server, location, clnt_sock);
-    file.open(file_root.c_str());
-    if (file.is_open()) {
-        while (std::getline(file, line)) {
-            ret += line;
-            line.clear();
-        }
-        status = 200;
-        len = file_root.rfind(".");
-        if (len != std::string::npos)
-            clients[clnt_sock].file_extension = file_root.substr(len + 1);
-    }
-    else
-        err = 404;
     return ret;
 }
+
+std::string Http::getContent(int clnt_sock) {
+    std::string     ret, root, line;
+    std::ifstream   file;
+    std::vector<ServerBlock>::iterator it;
+    std::vector<LocationBlock>::iterator itt;
+    bool    f;
+    
+    for (it = this->server.begin(); it != this->server.end(); it++) {
+        f = false;
+        if (it->port == clients[clnt_sock].port) {
+            for (itt = it->location.begin(); itt != it->location.end(); itt++) {
+                if (!std::strncmp(itt->default_root.c_str(), clients[clnt_sock].root.c_str(), itt->default_root.length())) {
+                    if (itt->autoindex) {
+                        f = true;
+                        break ;
+                    }
+                }
+            }
+        }
+        if (f)
+            break ;
+    }
+    if (f) {
+        clients[clnt_sock].file_extension = "html";
+        root = it->root;
+
+        if (itt->default_root[0] == '/')
+            root += itt->default_root.substr(1);
+        else
+            root += itt->default_root;
+        if (!itt->default_root.compare(clients[clnt_sock].root) || opendir(root.c_str()))
+            return buildAutoindex(it->root, itt->default_root);
+        file.open(root.c_str());
+        if (file.is_open()) {
+            while (std::getline(file, line))
+                ret += line + "\n";
+            return buildHtml(ret);
+        }
+        err = 500;
+    }
+    else {
+        ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
+        LocationBlock location = getLocation(clients[clnt_sock].root, server);
+        if (!clients[clnt_sock].root.compare(location.default_root)) {
+            if (!location.ret) {
+                root = getIndexRoot(server, location, clnt_sock);
+                file.open(root.c_str());
+                if (file.is_open()) {
+                    while (std::getline(file, line))
+                        ret += line + "\n";
+                    size_t len = root.rfind(".");
+                    if (len != std::string::npos)
+                        clients[clnt_sock].file_extension = root.substr(len + 1);
+                }
+                else
+                    err = 500;
+            }
+        }
+        else
+            err = 404;
+    }
+    if (err)
+        ret = buildErrorHtml(err);
+    return ret;
+}
+
 
 void    Http::getData(int clnt_sock) {
     std::string req_msg = clients[clnt_sock].request, addr;
@@ -194,7 +279,7 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
     if (err) {
         ret.first   = buildErrorMsg(clnt_sock);
         ret.second  = buildErrorHtml(err);
-        ret.first += "Content-length: " + ft_to_string(ret.second.length()) + "\r\n\r\n";
+        // ret.first += "Content-length: " + ft_to_string(ret.second.length()) + "\r\n\r\n";
     }
     else {
         ret.second  = getContent(clnt_sock);
@@ -205,6 +290,15 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
         }
     }
     return ret;
+}
+
+bool    Http::isValidAddress(ServerBlock server, int addr[4]) {
+    std::string tmp;
+    for (int i = 0; i < 3; i++) {
+        tmp += ft_to_string(addr[i]) + ".";
+    }
+    tmp += ft_to_string(addr[3]);
+    return !server.host.compare(tmp);
 }
 
 void    Http::checkRequestMsg(int clnt_sock) {
@@ -220,16 +314,14 @@ void    Http::checkRequestMsg(int clnt_sock) {
         err = 400;
     else if (!err && !methods[GET] && !method.compare("GET") && !methods[POST] && !method.compare("POST") && !methods[DELETE] && !method.compare("DELETE"))
         err = 405;
-    else if (!err){
+    if (!err) {
         if (root.length() > MAX_ROOT_LEN)
             err = 414;
-        else if (location.default_root.compare(root))
-            err = 404;
         else if (clients[clnt_sock].http.compare("HTTP"))
             err = 501;
         else if (clients[clnt_sock].http_ver.compare("1.1"))
             err = 505;
-        else if (checkValidateAddress(clients[clnt_sock].addr))
+        else if (!isValidAddress(server, clients[clnt_sock].addr))
             err = 403;
         else if (port == 65536 || server.port != port)
             err = 421;

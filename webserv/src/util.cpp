@@ -201,7 +201,7 @@ std::string    Http::spaceTrim(std::string str) {
 }
 
 bool	Http::checkValidateAddress(int addr[4]) {
-	int validAddr[3][4], err = 1;
+	int validAddr[4][4], err = 1;
 
 	for (int i = 0; i < 4; i++) {
 		if (addr[i] > 255 || addr[i] < 0) {
@@ -220,9 +220,15 @@ bool	Http::checkValidateAddress(int addr[4]) {
 
 	validAddr[2][0] = 10;
 	validAddr[2][1] = 31;
-	validAddr[2][2] = 1;
+	validAddr[2][2] = 2;
 	validAddr[2][3] = 4;
-	for (int i = 0; i < 3; i++)
+
+    validAddr[3][0] = 10;
+	validAddr[3][1] = 19;
+	validAddr[3][2] = 200;
+	validAddr[3][3] = 153;
+
+	for (int i = 0; i < 4; i++)
 	{
 		if (addr[0] == validAddr[i][0] && addr[1] == validAddr[i][1] && \
 			addr[2] == validAddr[i][2] && addr[3] == validAddr[i][3]
@@ -313,13 +319,17 @@ std::string Http::formatTime(const time_t& time) {
     return std::string(buffer);
 }
 
-std::string Http::buildAutoindex(std::string dir_root) {
-    std::string ret, msg;
+std::string Http::buildAutoindex(std::string server_root, std::string location_root) {
+    std::string ret, msg, dir_root;
     DIR *dir;
     struct dirent *entry;
     struct stat file_stat;
     std::vector<FileInfo> files;
 
+    dir_root = server_root;
+    if (location_root[0] == '/')
+        location_root = location_root.substr(1);
+    dir_root += location_root;
     dir = opendir(dir_root.c_str());
     if (dir) {
         while ((entry = readdir(dir)) != NULL) {
@@ -344,9 +354,9 @@ std::string Http::buildAutoindex(std::string dir_root) {
         for (std::vector<FileInfo>::iterator it = files.begin(); it != files.end(); it++) {
             msg += "    <tr>";
 			if (it->is_dir)
-            	msg += "        <td><a href=\"" + dir_root + "/" + it->name + "/\">" + it->name + "/</a></td>\n";
+            	msg += "        <td><a href=\"" + location_root + "/" + it->name + "/\">" + it->name + "/</a></td>\n";
 			else
-            	msg += "        <td><a href=\"" + dir_root + "/" + it->name + "\">" + it->name + "</a></td>\n";
+            	msg += "        <td><a href=\"" + location_root + "/" + it->name + "\">" + it->name + "</a></td>\n";
             msg += "        <td>" + formatTime(it->lastModified) + "</td>\n";
             double fileSize = static_cast<double>(it->size);
             msg += "        <td>" + formatSize(fileSize) + "</td>\n";
@@ -355,8 +365,15 @@ std::string Http::buildAutoindex(std::string dir_root) {
         msg += "    </table>\n";
         ret = buildHtml(msg);
     } else {
-        err = 403;
+        err = 500;
         return "";
     }
     return ret;
+}
+
+void    Http::printLog(std::string color, std::string msg, int fd) {
+    if (fd == STDOUT)
+        std::cout << color << msg << "\033[0m" << std::endl;
+    else
+        std::cerr << color << msg << "\033[0m"<< std::endl;
 }

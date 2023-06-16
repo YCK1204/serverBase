@@ -94,7 +94,7 @@ void	Http::checkValidConfig() {
 		}
 		checkValidAddr(it->host);
 		for (std::vector<LocationBlock>::iterator itt = it->location.begin(); itt != it->location.end(); itt++) {
-			for (std::vector<LocationBlock>::iterator ittt = it->location.begin(); ittt != it->location.end(); ittt++) {
+			for (std::vector<LocationBlock>::iterator ittt = itt; ittt != it->location.end(); ittt++) {
 				if (itt == ittt)
 					continue ;
 				if (!itt->default_root.compare(ittt->default_root)) {

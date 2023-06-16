@@ -28,9 +28,18 @@
 #include "../header/Mime.hpp"
 
 #define LISTEN_SIZE 20
-#define BUF_SIZE 2
-#define TIMEOUT 10
+#define BUF_SIZE 2048
+#define TIMEOUT 2
 #define MAX_ROOT_LEN 30
+
+#define RED "\033[31m"
+#define ORANGE "\033[33m"
+#define YELLOW "\033[93m"
+#define LIME "\033[92m"
+#define SKY_BLUE "\033[96m"
+
+#define STDOUT 1
+#define STDERR 2
 
 enum files {
     F_HTTP,
@@ -178,11 +187,13 @@ private:
     std::string                                 spaceTrim(std::string str);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
     std::string                                 formatTime(const time_t& time);
+    std::string                                 buildAutoindex(std::string server_root, std::string location_root);
 
     void                                        printConfigInfo();
     void	                                    addFdSet(int clnt_sock, fd_set &event);
     void	                                    clearFdSet(int clnt_sock, fd_set &event);
     void                                        recursive_to_string(int n, std::string &ret);
+    void                                        printLog(std::string color, std::string msg, int fd);
     void	                                    exception_util(const std::string &str, s_block_type type);
 
     uint16_t                                    ft_ntohs(uint16_t port);
@@ -230,11 +241,13 @@ private:
     std::string                                 getAddress(std::string req_msg);
     std::string                                 getHttpVer(std::string req_msg);
     std::string                                 getConnection(std::string req_msg);
-    std::string                                 buildAutoindex(std::string dir_root);
     std::string                                 getIndexRoot(ServerBlock server, LocationBlock location, int clnt_sock);
 
     void                                        getData(int clnt_sock);
     void                                        checkRequestMsg(int clnt_sock);
+
+    bool                                        isAutoindex(int clnt_sock);
+    bool                                        isValidAddress(ServerBlock server, int addr[4]);
     /* response_functions */
     
 

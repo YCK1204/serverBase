@@ -33,7 +33,7 @@ std::string Http::buildErrorMsg(int clnt_sock) {
     ret += "HTTP/1.1 " + ft_to_string(err) + " "+ mime.getStatus(err) + "\r\n";
     ret += "Connection: keep-alive\r\n";
     ret += getDate() + "\r\n";
-    ret += "Content-type: text/html\r\n";
+    ret += "Content-type: text/html\r\n\r\n";
 
     return ret;
 }
