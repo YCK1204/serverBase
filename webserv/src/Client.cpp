@@ -134,5 +134,6 @@ void	Http::clientHandler() {
 			if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT)
 				disconnectClient(i);
 		}
+		usleep(1000);
 	}
 }

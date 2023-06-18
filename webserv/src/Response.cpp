@@ -148,10 +148,9 @@ std::string Http::getContent(int clnt_sock) {
         if (f)
             break ;
     }
+    clients[clnt_sock].file_extension = "html";
     if (f) {
-        clients[clnt_sock].file_extension = "html";
         root = it->root;
-
         root += clients[clnt_sock].root;
         if (isDir(root)) {
             ret = buildAutoindex(it->root, clients[clnt_sock].root);
@@ -171,19 +170,19 @@ std::string Http::getContent(int clnt_sock) {
         ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
         LocationBlock location = getLocation(clients[clnt_sock].root, server);
         if (!clients[clnt_sock].root.compare(location.default_root)) {
-            if (!location.ret) {
-                root = getIndexRoot(server, location, clnt_sock);
-                file.open(root.c_str());
-                if (file.is_open()) {
-                    while (std::getline(file, line))
-                        ret += line + "\n";
-                    size_t len = root.rfind(".");
-                    if (len != std::string::npos)
-                        clients[clnt_sock].file_extension = root.substr(len + 1);
-                }
-                else
-                    err = 500;
+            if (location.ret)
+                return "";
+            root = getIndexRoot(server, location, clnt_sock);
+            file.open(root.c_str());
+            if (file.is_open()) {
+                while (std::getline(file, line))
+                    ret += line + "\n";
+                size_t len = root.rfind(".");
+                if (len != std::string::npos)
+                    clients[clnt_sock].file_extension = root.substr(len + 1);
             }
+            else
+                err = 500;
         }
         else
             err = 404;
@@ -247,6 +246,8 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
 }
 
 bool    Http::isValidAddress(ServerBlock server, int addr[4]) {
+    if (!server.host.compare("0.0.0.0"))
+        return true;
     std::string tmp;
     for (int i = 0; i < 3; i++) {
         tmp += ft_to_string(addr[i]) + ".";
