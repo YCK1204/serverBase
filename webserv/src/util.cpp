@@ -349,14 +349,13 @@ std::string Http::buildAutoindex(std::string server_root, std::string location_r
             files.push_back(file);
         }
         std::sort(files.begin(), files.end(), compareFiles);
-
         msg += "    <table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
         for (std::vector<FileInfo>::iterator it = files.begin(); it != files.end(); it++) {
             msg += "    <tr>";
 			if (it->is_dir)
-            	msg += "        <td><a href=\"" + location_root + "/" + it->name + "/\">" + it->name + "/</a></td>\n";
+            	msg += "        <td><a href=\"" + it->name + "/\">" + it->name + "/</a></td>\n";
 			else
-            	msg += "        <td><a href=\"" + location_root + "/" + it->name + "\">" + it->name + "</a></td>\n";
+            	msg += "        <td><a href=\"" + it->name + "\">" + it->name + "</a></td>\n";
             msg += "        <td>" + formatTime(it->lastModified) + "</td>\n";
             double fileSize = static_cast<double>(it->size);
             msg += "        <td>" + formatSize(fileSize) + "</td>\n";
@@ -376,4 +375,27 @@ void    Http::printLog(std::string color, std::string msg, int fd) {
         std::cout << color << msg << "\033[0m" << std::endl;
     else
         std::cerr << color << msg << "\033[0m"<< std::endl;
+}
+
+bool    Http::isDir(std::string dir_root) {
+    DIR     *dir;
+    bool    ret = false;
+
+    dir = opendir(dir_root.c_str());
+    if (dir) {
+        ret = true;
+        closedir(dir);
+    }
+    return ret;
+}
+
+bool    Http::isFile(std::string file_root) {
+    std::ifstream   file;
+    bool            ret = false;
+
+    file.open(file_root.c_str());
+    if (file.is_open())
+        ret = true;
+    file.close();
+    return ret;
 }

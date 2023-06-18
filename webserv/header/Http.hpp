@@ -198,7 +198,9 @@ private:
 
     uint16_t                                    ft_ntohs(uint16_t port);
 
+    bool                                        isDir(std::string dir_root);
     bool	                                    ExistFile(std::string &root);
+    bool                                        isFile(std::string file_root);
     bool	                                    checkValidateAddress(int addr[4]);
     bool	                                    ExistDirectory(std::string &root);
 

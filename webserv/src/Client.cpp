@@ -93,7 +93,6 @@ void	Http::writeResponse(int clnt_sock) {
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
 			response = getResponse(clnt_sock);
-			std::cout << clients[clnt_sock].request << std::endl;
 			if ((n = (write(clnt_sock, response.first.c_str(), response.first.length()))) == -1)
 				printLog(ORANGE, "Error : write error (response msg)", STDERR);
 			if ((n = (write(clnt_sock, response.second.c_str(), response.second.length()))) == -1)

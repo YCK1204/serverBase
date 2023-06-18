@@ -112,8 +112,10 @@ std::string Http::getMsg(int clnt_sock, int length) {
     ret += "Connection: " + clients[clnt_sock].connection + "\r\n";
     ret += "Content-length: " + ft_to_string(length) + "\r\n";
     ret += "Content-type: " + mime.getType(clients[clnt_sock].file_extension) + "\r\n";
-    if (location.ret)
+    if (location.ret) {
         ret += "Location: " + location.redirect + "\r\n";
+        status = 301;
+    }
     ret += getDate() + "\r\n";
     if (!clients[clnt_sock].connection.compare("keep-alive"))
         ret += "keep-alive: timeout=" + ft_to_string(TIMEOUT) + ", max=" + ft_to_string(LISTEN_SIZE) + "\r\n";
@@ -121,55 +123,6 @@ std::string Http::getMsg(int clnt_sock, int length) {
     if (stat(file_path.c_str(), &file_stat) >= 0)
         ret += "Last-Modified: " + formatTime(file_stat.st_mtime) + "\r\n";
     ret += "Server: " + server.server_name + "\r\n\r\n";
-    return ret;
-}
-
-// std::string Http::getContent(int clnt_sock) {
-//     ServerBlock     server      = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
-//     LocationBlock   location    = getLocation(clients[clnt_sock].root, server);
-//     std::string     ret, file_root, line;
-//     std::ifstream   file;
-//     std::size_t     len;
-
-//     clients[clnt_sock].file_extension = "html";
-//     if (location.autoindex) {
-//         status = 200;
-//         return buildAutoindex(server.root + location.default_root.substr(1));
-//     }
-//     if (location.ret) {
-//         status = 301;
-//         return "";
-//     }
-//     file_root = getIndexRoot(server, location, clnt_sock);
-//     file.open(file_root.c_str());
-//     if (file.is_open()) {
-//         while (std::getline(file, line)) {
-//             ret += line;
-//             line.clear();
-//         }
-//         status = 200;
-//         len = file_root.rfind(".");
-//         if (len != std::string::npos)
-//             clients[clnt_sock].file_extension = file_root.substr(len + 1);
-//     }
-//     else
-//         err = 404;
-//     return ret;
-// }
-
-bool    Http::isAutoindex(int clnt_sock) {
-    bool    ret = false;
-    ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
-    LocationBlock location = getLocation(clients[clnt_sock].root, server);
-
-    if (!std::strncmp(location.default_root.c_str(), clients[clnt_sock].root.c_str(), location.default_root.length())) {
-        if (location.autoindex)
-            ret = true;
-    }
-    else if (!location.default_root.compare(clients[clnt_sock].root)) {
-        if (location.autoindex)
-            ret = true;
-    }
     return ret;
 }
 
@@ -199,21 +152,22 @@ std::string Http::getContent(int clnt_sock) {
         clients[clnt_sock].file_extension = "html";
         root = it->root;
 
-        if (itt->default_root[0] == '/')
-            root += itt->default_root.substr(1);
-        else
-            root += itt->default_root;
-        if (!itt->default_root.compare(clients[clnt_sock].root) || opendir(root.c_str()))
-            return buildAutoindex(it->root, itt->default_root);
-        file.open(root.c_str());
-        if (file.is_open()) {
-            while (std::getline(file, line))
-                ret += line + "\n";
-            return buildHtml(ret);
+        root += clients[clnt_sock].root;
+        if (isDir(root)) {
+            ret = buildAutoindex(it->root, clients[clnt_sock].root);
+        } else {
+            if (isFile(root)) {
+                file.open(root.c_str());
+                while (std::getline(file, line)) {
+                    ret += line + "\n";
+                    line.clear();
+                }
+                file.close();
+            }
+            else
+                err = 500;
         }
-        err = 500;
-    }
-    else {
+    } else {
         ServerBlock server = getServer(ft_to_string(clients[clnt_sock].port), clients[clnt_sock].root);
         LocationBlock location = getLocation(clients[clnt_sock].root, server);
         if (!clients[clnt_sock].root.compare(location.default_root)) {
