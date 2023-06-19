@@ -73,7 +73,10 @@ void Http::readRequestMsg(int clnt_sock) {
 
     char* buf = new char[BUF_SIZE];
     n = read(clnt_sock, buf, BUF_SIZE);
-    if (n == -1) {
+	std::cout << clnt_sock << "n : " << n << std::endl;
+	std::cout << buf << std::endl;
+	std::cout << "enddddasddasdasddasasdsdaa" << std::endl;
+    if (n <= 0) {
         disconnectClient(clnt_sock);
     } else if (n) {
         buf[n] = '\0';

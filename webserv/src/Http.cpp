@@ -6,7 +6,7 @@ Http::Http() {}
 Http::Http(const std::string &path)
 {
 	ParsingConfig(path);
-	printConfigInfo();
+	// printConfigInfo();
 	checkValidConfig();
 	SettingHttp();
 	runServer();
