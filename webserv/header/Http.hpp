@@ -118,6 +118,7 @@ typedef struct {
 typedef struct {
     int                                         port;
     int                                         addr[4];
+    int                                         body_size;
 
     std::string                                 root;
     std::string                                 http;
@@ -126,6 +127,7 @@ typedef struct {
     std::string                                 http_ver;
     std::string                                 connection;
     std::string                                 file_extension;
+    std::string                                 body_request;
 
     ssize_t                                     str_len;
     std::time_t                                 last_active_times;

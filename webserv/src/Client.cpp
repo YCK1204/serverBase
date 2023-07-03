@@ -1,12 +1,12 @@
 #include "../header/Http.hpp"
 
 void    Http::clientInit(int clnt_sock) {
-	clients[clnt_sock].port					= 80;
     clients[clnt_sock].str_len				= 0;
 	clients[clnt_sock].root					= "";
 	clients[clnt_sock].method				= "";
     clients[clnt_sock].request				= "";
 	clients[clnt_sock].http_ver				= "";
+	clients[clnt_sock].body_request			= "";
 	clients[clnt_sock].file_extension		= "";
 	clients[clnt_sock].connection			= "keep-alive";
     clients[clnt_sock].last_active_times	= std::time(NULL);
@@ -69,25 +69,33 @@ void	Http::clientAccept(int serv_sock) {
 
 void Http::readRequestMsg(int clnt_sock) {
     ssize_t n;
-
-    // char* buf = new char[BUF_SIZE];
 	char buf[BUF_SIZE + 1];
+
     n = read(clnt_sock, buf, BUF_SIZE);
-	std::cout << "clnt: " << clnt_sock << " read: " << n << std::endl;
-	std::cout << "buf: " << std::endl << buf << std::endl;
     if (n <= 0) {
         disconnectClient(clnt_sock);
-    } 
-	else if (n) {
+    } else if (n) {
         buf[n] = '\0';
-        clients[clnt_sock].request += buf;
+        clients[clnt_sock].request += static_cast<std::string>(buf);
         clients[clnt_sock].str_len += n;
         clients[clnt_sock].last_active_times = std::time(NULL);
-		writeResponse(clnt_sock);
-		disconnectClient(clnt_sock);
-
+		std::size_t len = clients[clnt_sock].request.find("\r\n\r\n");
+		if (len != std::string::npos) {
+			if (clients[clnt_sock].request.find("POST") != std::string::npos) {
+				std::size_t length = clients[clnt_sock].request.find("content-length");
+				if (length != std::string::npos) {
+					err = 400;
+					writeResponse(clnt_sock);
+				} else {
+					clients[clnt_sock].body_request = clients[clnt_sock].request.substr(len + 5);
+					if (clients[clnt_sock].body_request.length() == static_cast<unsigned long>(ft_stoi(clients[clnt_sock].request.substr(length + 15))))
+						writeResponse(clnt_sock);
+				}
+			}
+			else
+				writeResponse(clnt_sock);
+		}
     }
-    // delete[] buf;
 }
 
 void	Http::writeResponse(int clnt_sock) {
@@ -96,12 +104,9 @@ void	Http::writeResponse(int clnt_sock) {
 
 	err = 0;
 	status = 200;
-	std::cout << "clnt: " << clnt_sock << std::endl;
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
 			response = getResponse(clnt_sock);
-			std::cout << response.first << std::endl;
-			std::cout << response.second << std::endl;
 			if ((n = (write(clnt_sock, response.first.c_str(), response.first.length()))) == -1)
 				printLog(ORANGE, "Error : write error (response msg)", STDERR);
 			if ((n = (write(clnt_sock, response.second.c_str(), response.second.length()))) == -1)
@@ -120,12 +125,10 @@ void	Http::writeResponse(int clnt_sock) {
 						printLog(YELLOW, msg, STDOUT);
 				}
 			}
-			// if (!clients[clnt_sock].connection.compare("close"))
-			// 	disconnectClient(clnt_sock);
-			// else {
-			// 	clientInit(clnt_sock);
-			// 	clients[clnt_sock].request.clear();
-			// }
+			if (!clients[clnt_sock].connection.compare("close"))
+				disconnectClient(clnt_sock);
+			else
+				clientInit(clnt_sock);
 		}
 	}
 }
@@ -137,19 +140,9 @@ void	Http::clientHandler() {
 		else if (FD_ISSET(i, &read_event)) {
 			eventReadHandler(i);
 		}
-		// else if (i >= 5 && FD_ISSET(i, &write_event)){
-			
-		// }
-		// if (clients.find(i) != clients.end()) {
-		// 	if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT) {
-		// 		std::cout << "123" << std::endl;
-		// 		disconnectClient(i);
-		// 	}
-		// }
+		if (clients.find(i) != clients.end()) {
+			if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT)
+				disconnectClient(i);
+		}
 	}
-	
 }
-
-// read -> len > 0 read다 하고 read 비활 write 이벤트 활성화
-// write -> 응답보내기, read이벤트 활성화, write 비활
-// read 로 들어와서 len == 0 이면은 disconnect

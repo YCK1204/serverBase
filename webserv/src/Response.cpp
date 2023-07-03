@@ -232,15 +232,12 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
     if (err) {
         ret.first   = buildErrorMsg();
         ret.second  = buildErrorHtml(err);
-        // ret.first += "Content-length: " + ft_to_string(ret.second.length()) + "\r\n\r\n";
-    }
-    else {
-        ret.second  = getContent(clnt_sock);
+    } else {
+        ret.second = getContent(clnt_sock);
         if (err)
             ret.first = buildErrorMsg();
-        else {
-            ret.first   = getMsg(clnt_sock, ret.second.length());
-        }
+        else
+            ret.first = getMsg(clnt_sock, ret.second.length());
     }
     return ret;
 }
@@ -265,6 +262,8 @@ void    Http::checkRequestMsg(int clnt_sock) {
     LocationBlock       location    = getLocation(root, server);
     bool                methods[3]  = {location.methods[0], location.methods[1], location.methods[2]};
 
+    if (err)
+        return ;
     if (method.compare("GET") && method.compare("POST") && method.compare("DELETE"))
         err = 400;
     else if (!err && !methods[GET] && !method.compare("GET") && !methods[POST] && !method.compare("POST") && !methods[DELETE] && !method.compare("DELETE"))
