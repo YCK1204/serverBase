@@ -33,7 +33,7 @@ void	Http::eventReadHandler(int clnt_sock) {
 	for (std::vector<ServerBlock>::iterator it = this->server.begin(); it != this->server.end(); it++) {
 		server = *it;
 		if (clnt_sock == server.serv_sock) {
-			clientAccept(server.serv_sock, clnt_sock, server);
+			clientAccept(server.serv_sock);
 			t = true;
 			break ;
 		}
@@ -51,11 +51,10 @@ void	Http::disconnectClient(int clnt_sock) {
 	clearFdSet(clnt_sock, events);
 }
 
-void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
+void	Http::clientAccept(int serv_sock) {
 	int					clnt_sk;
 	struct sockaddr_in	clnt_adr;
 	socklen_t			clnt_adr_size;
-	struct kevent		temp;
 
 	clnt_adr_size = sizeof(clnt_adr);
 	if ((clnt_sk = accept(serv_sock, (struct sockaddr *)&clnt_adr, &clnt_adr_size)) == -1) {
@@ -71,20 +70,24 @@ void	Http::clientAccept(int serv_sock, int clnt_sock, ServerBlock &server) {
 void Http::readRequestMsg(int clnt_sock) {
     ssize_t n;
 
-    char* buf = new char[BUF_SIZE];
+    // char* buf = new char[BUF_SIZE];
+	char buf[BUF_SIZE + 1];
     n = read(clnt_sock, buf, BUF_SIZE);
-	std::cout << clnt_sock << "n : " << n << std::endl;
-	std::cout << buf << std::endl;
-	std::cout << "enddddasddasdasddasasdsdaa" << std::endl;
+	std::cout << "clnt: " << clnt_sock << " read: " << n << std::endl;
+	std::cout << "buf: " << std::endl << buf << std::endl;
     if (n <= 0) {
         disconnectClient(clnt_sock);
-    } else if (n) {
+    } 
+	else if (n) {
         buf[n] = '\0';
         clients[clnt_sock].request += buf;
         clients[clnt_sock].str_len += n;
         clients[clnt_sock].last_active_times = std::time(NULL);
+		writeResponse(clnt_sock);
+		disconnectClient(clnt_sock);
+
     }
-    delete[] buf;
+    // delete[] buf;
 }
 
 void	Http::writeResponse(int clnt_sock) {
@@ -93,9 +96,12 @@ void	Http::writeResponse(int clnt_sock) {
 
 	err = 0;
 	status = 200;
+	std::cout << "clnt: " << clnt_sock << std::endl;
 	if (clients.end() != clients.find(clnt_sock)) {
 		if (!clients[clnt_sock].request.empty()) {
 			response = getResponse(clnt_sock);
+			std::cout << response.first << std::endl;
+			std::cout << response.second << std::endl;
 			if ((n = (write(clnt_sock, response.first.c_str(), response.first.length()))) == -1)
 				printLog(ORANGE, "Error : write error (response msg)", STDERR);
 			if ((n = (write(clnt_sock, response.second.c_str(), response.second.length()))) == -1)
@@ -114,13 +120,12 @@ void	Http::writeResponse(int clnt_sock) {
 						printLog(YELLOW, msg, STDOUT);
 				}
 			}
-
-			if (!clients[clnt_sock].connection.compare("close"))
-				disconnectClient(clnt_sock);
-			else {
-				clientInit(clnt_sock);
-				// clients[clnt_sock].request.clear();
-			}
+			// if (!clients[clnt_sock].connection.compare("close"))
+			// 	disconnectClient(clnt_sock);
+			// else {
+			// 	clientInit(clnt_sock);
+			// 	clients[clnt_sock].request.clear();
+			// }
 		}
 	}
 }
@@ -129,14 +134,22 @@ void	Http::clientHandler() {
 	for (int i = 0; i <= fd_max; i++) {
 		if (FD_ISSET(i, &err_event))
 			eventErrHandler(i);
-		else if (FD_ISSET(i, &read_event))
+		else if (FD_ISSET(i, &read_event)) {
 			eventReadHandler(i);
-		else if (FD_ISSET(i, &write_event))
-			writeResponse(i);
-		if (clients.find(i) != clients.end()) {
-			if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT)
-				disconnectClient(i);
 		}
-		usleep(1000);
+		// else if (i >= 5 && FD_ISSET(i, &write_event)){
+			
+		// }
+		// if (clients.find(i) != clients.end()) {
+		// 	if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT) {
+		// 		std::cout << "123" << std::endl;
+		// 		disconnectClient(i);
+		// 	}
+		// }
 	}
+	
 }
+
+// read -> len > 0 read다 하고 read 비활 write 이벤트 활성화
+// write -> 응답보내기, read이벤트 활성화, write 비활
+// read 로 들어와서 len == 0 이면은 disconnect

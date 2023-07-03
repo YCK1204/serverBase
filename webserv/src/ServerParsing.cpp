@@ -13,7 +13,7 @@ ServerBlock Http::makeServer(std::ifstream &file) {
         if (!cmd.compare("}") && ++t)
             break ;
 		if (cmd.compare("location"))
-			setServerOption(file, ss, cmd, ret, types);
+			setServerOption(ss, cmd, ret, types);
         else 
             ret.location.push_back(makeLocation(file, ss));
     }
@@ -25,7 +25,7 @@ ServerBlock Http::makeServer(std::ifstream &file) {
 	return ret;
 }
 
-std::string Http::buildServerOption(std::ifstream &file, std::stringstream &ss, s_block_type type) {
+std::string Http::buildServerOption(std::stringstream &ss, s_block_type type) {
     std::string ret, tmp, obj;
 
     switch (type) {
@@ -45,21 +45,21 @@ std::string Http::buildServerOption(std::ifstream &file, std::stringstream &ss, 
     return ret;
 }
 
-void    Http::setServerOption(std::ifstream &file, std::stringstream &ss, std::string cmd, ServerBlock &ret, int types[7]) {
+void    Http::setServerOption(std::stringstream &ss, std::string cmd, ServerBlock &ret, int types[7]) {
     if (!cmd.compare("listen") && ++types[LISTEN])
-        ret.port = ft_stoi(buildServerOption(file, ss, LISTEN).c_str(), HOST);
+        ret.port = ft_stoi(buildServerOption(ss, LISTEN).c_str(), HOST);
     else if (!cmd.compare("error_page") && ++types[ERROR_PAGE])
-        ret.error_page = buildServerOption(file, ss, ERROR_PAGE);
+        ret.error_page = buildServerOption(ss, ERROR_PAGE);
     else if (!cmd.compare("host") && ++types[HOST])
-        ret.host = buildServerOption(file, ss, HOST);
+        ret.host = buildServerOption(ss, HOST);
     else if (!cmd.compare("client_body_size") && ++types[BODY_SIZE])
-        ret.client_body_size = ft_stoi(buildServerOption(file, ss, BODY_SIZE), BODY_SIZE);
+        ret.client_body_size = ft_stoi(buildServerOption(ss, BODY_SIZE), BODY_SIZE);
     else if (!cmd.compare("index") && ++types[S_INDEX])
-        ret.index = buildServerOption(file, ss, S_INDEX);
+        ret.index = buildServerOption(ss, S_INDEX);
     else if (!cmd.compare("root") && ++types[S_ROOT])
-        ret.root = buildServerOption(file, ss, S_ROOT);
+        ret.root = buildServerOption(ss, S_ROOT);
     else if (!cmd.compare("server_name") && ++types[SERVER_NAME])
-        ret.server_name = buildServerOption(file, ss, SERVER_NAME);
+        ret.server_name = buildServerOption(ss, SERVER_NAME);
     else {
         occurException(48, cmd, CONFIG, S_PARSING,
         "server option error");

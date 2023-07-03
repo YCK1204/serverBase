@@ -1,7 +1,7 @@
 #include "../header/Http.hpp"
 
 volatile sig_atomic_t flag = 0;
-void	handle_signal(int signum) { signum = 1;}
+void	handle_signal(int &signum) { signum = 1;}
 Http::Http() {}
 Http::Http(const std::string &path)
 {
@@ -73,6 +73,7 @@ void    Http::runServer()
 		err_event = events;
 		if ((select(fd_max + 1, &read_event, 0, &err_event, NULL)) < 0)
 			serverFunctionExecuteFailed(136, "select()");
+		
 		clientHandler();
 	}
 

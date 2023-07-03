@@ -4,8 +4,8 @@ SRCS = $(wildcard ./src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 FLAG = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g3
 
-# %.o : %.c
-# 	$(CPP) $(FLAGS) -c
+%.o : %.cpp
+	$(CPP) $(FLAG) -c -o $@ $^
 
 $(NAME) : $(OBJS)
 	$(CPP) $(FLAG) $(OBJS) -o $@

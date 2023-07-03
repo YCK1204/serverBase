@@ -82,7 +82,7 @@ void    Http::buildLocationOption(std::stringstream &ss, bool types[3]) {
 }
 
 int Http::distinctionMethods(std::string &method) {
-    int ret;
+    int ret = 0;
 
     if (!method.compare("GET"))
         ret = 0;
@@ -99,7 +99,7 @@ int Http::distinctionMethods(std::string &method) {
 
 bool    Http::buildLocationOption(std::stringstream &ss, std::string tt) {
     std::string t;
-    bool    ret;
+    bool    ret = false;
 
     ss >> t >> tt;
     if (!t.compare("on"))

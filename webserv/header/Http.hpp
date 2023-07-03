@@ -160,7 +160,7 @@ private:
 
     /* parsing_functions*/
     std::string                                 buildLocationOption(std::stringstream &ss);
-    std::string                                 buildServerOption(std::ifstream &file, std::stringstream &ss, s_block_type type);
+    std::string                                 buildServerOption(std::stringstream &ss, s_block_type type);
 
     ServerBlock                                 makeServer(std::ifstream &file);
     LocationBlock                               makeLocation(std::ifstream &file, std::stringstream &ss);
@@ -171,7 +171,7 @@ private:
     void	                                    checkEmptyFile(const std::string &path);
     void	                                    checkValidAddr(const std::string &host);
     void                                        buildLocationOption(std::stringstream &ss, bool types[3]);
-    void                                        setServerOption(std::ifstream &file, std::stringstream &ss, std::string cmd, ServerBlock &ret, int types[7]);
+    void                                        setServerOption(std::stringstream &ss, std::string cmd, ServerBlock &ret, int types[7]);
 
     int                                         distinctionMethods(std::string &method);
     bool                                        buildLocationOption(std::stringstream &ss, std::string tt);
@@ -183,7 +183,7 @@ private:
 
     std::string                                 getDate();
     std::string                                 ft_to_string(int n);
-    std::string                                 formatSize(double size);
+    // std::string                                 formatSize(double size);
     std::string                                 spaceTrim(std::string str);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
     std::string                                 formatTime(const time_t& time);
@@ -222,11 +222,11 @@ private:
     void	                                    eventReadHandler(int clnt_sock);
     void	                                    disconnectClient(int clnt_sock);
     void                                        clientInit(int clnt_sock);
-    void	                                    clientAccept(int serv_sock, int clnt_sock, ServerBlock &server);
+    void	                                    clientAccept(int serv_sock);
     /* client_functions*/
 
     /* html_functions*/
-    std::string                                 buildErrorMsg(int clnt_sock);
+    std::string                                 buildErrorMsg();
     std::string                                 buildHtml(const std::string msg);
     std::string                                 buildErrorHtml(const int status);
     /* html_functions*/
@@ -243,7 +243,7 @@ private:
     std::string                                 getAddress(std::string req_msg);
     std::string                                 getHttpVer(std::string req_msg);
     std::string                                 getConnection(std::string req_msg);
-    std::string                                 getIndexRoot(ServerBlock server, LocationBlock location, int clnt_sock);
+    std::string                                 getIndexRoot(ServerBlock server, LocationBlock location);
 
     void                                        getData(int clnt_sock);
     void                                        checkRequestMsg(int clnt_sock);

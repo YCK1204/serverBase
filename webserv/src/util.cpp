@@ -151,7 +151,6 @@ std::string Http::getDate() {
     int month;
     char buffer[80];
     ssize_t monthPos;
-    struct tm* timeInfo;
     struct tm* selTimeInfo;
     time_t rawTime, selTime;
     std::string dateHeader, monthName;
@@ -161,7 +160,6 @@ std::string Http::getDate() {
     };
 
     std::time(&rawTime);
-    timeInfo = std::gmtime(&rawTime);
     selTime = rawTime + (9 * 3600);
     selTimeInfo = std::gmtime(&selTime);
     std::strftime(buffer, sizeof(buffer), "Date: %a, %d %b %Y %H:%M:%S SEL", selTimeInfo);
@@ -169,7 +167,7 @@ std::string Http::getDate() {
     month = selTimeInfo->tm_mon;
     monthName = monthNames[month];
     monthPos = dateHeader.find("MMM");
-    if (monthPos != std::string::npos)
+    if (static_cast<size_t>(monthPos) != std::string::npos)
         dateHeader.replace(monthPos, 3, monthName);
     return dateHeader;
 }
@@ -257,10 +255,12 @@ ServerBlock Http::getServer(std::string host, std::string root) {
                 }
             }
         }
+        
         if (f)
             break ;
     }
     for (it = this->server.begin(); it != this->server.end() && port != it->port; it++)
+
     if (it == this->server.end())
         return *(this->server.begin());
     return *it;
@@ -280,7 +280,7 @@ LocationBlock    Http::getLocation(std::string root, ServerBlock server) {
     return *it;
 }
 
-std::string Http::getIndexRoot(ServerBlock server, LocationBlock location, int clnt_sock) {
+std::string Http::getIndexRoot(ServerBlock server, LocationBlock location) {
     std::string ret;
 
     if (location.root.empty())
@@ -298,18 +298,18 @@ bool compareFiles(const FileInfo& file1, const FileInfo& file2) {
     return file1.name < file2.name;
 }
 
-std::string Http::formatSize(double size) {
-    const char* units[] = {"B", "KB", "MB", "GB", "TB"};
-    int unitIndex = 0;
-    while (size >= 1024 && unitIndex < 4) {
-        size /= 1024;
-        unitIndex++;
-    }
+// std::string Http::formatSize(double size) {
+//     const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+//     int unitIndex = 0;
+//     while (size >= 1024 && unitIndex < 4) {
+//         size /= 1024;
+//         unitIndex++;
+//     }
 
-    char buffer[100];
-    std::sprintf(buffer, "%.2f %s", size, units[unitIndex]);
-    return std::string(buffer);
-}
+//     char buffer[100];
+//     sprintf(buffer, "%.2f %s", size, units[unitIndex]);
+//     return std::string(buffer);
+// }
 
 std::string Http::formatTime(const time_t& time) {
     struct tm* timeinfo;
@@ -357,8 +357,8 @@ std::string Http::buildAutoindex(std::string server_root, std::string location_r
 			else
             	msg += "        <td><a href=\"" + it->name + "\">" + it->name + "</a></td>\n";
             msg += "        <td>" + formatTime(it->lastModified) + "</td>\n";
-            double fileSize = static_cast<double>(it->size);
-            msg += "        <td>" + formatSize(fileSize) + "</td>\n";
+            // double fileSize = static_cast<double>(it->size);
+        //    msg += "        <td>" + formatSize(fileSize) + "</td>\n";
             msg += "    </tr>\n";
         }
         msg += "    </table>\n";

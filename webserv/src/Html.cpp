@@ -27,7 +27,7 @@ std::string Http::buildErrorHtml(const int status) {
     return ret;
 }
 
-std::string Http::buildErrorMsg(int clnt_sock) {
+std::string Http::buildErrorMsg() {
     std::string ret;
 
     ret += "HTTP/1.1 " + ft_to_string(err) + " "+ mime.getStatus(err) + "\r\n";

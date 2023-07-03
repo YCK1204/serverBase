@@ -119,7 +119,7 @@ std::string Http::getMsg(int clnt_sock, int length) {
     ret += getDate() + "\r\n";
     if (!clients[clnt_sock].connection.compare("keep-alive"))
         ret += "keep-alive: timeout=" + ft_to_string(TIMEOUT) + ", max=" + ft_to_string(LISTEN_SIZE) + "\r\n";
-    file_path = getIndexRoot(server, location, clnt_sock);
+    file_path = getIndexRoot(server, location);
     if (stat(file_path.c_str(), &file_stat) >= 0)
         ret += "Last-Modified: " + formatTime(file_stat.st_mtime) + "\r\n";
     ret += "Server: " + server.server_name + "\r\n\r\n";
@@ -172,7 +172,7 @@ std::string Http::getContent(int clnt_sock) {
         if (!clients[clnt_sock].root.compare(location.default_root)) {
             if (location.ret)
                 return "";
-            root = getIndexRoot(server, location, clnt_sock);
+            root = getIndexRoot(server, location);
             file.open(root.c_str());
             if (file.is_open()) {
                 while (std::getline(file, line))
@@ -230,14 +230,14 @@ std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
     checkRequestMsg(clnt_sock);
 
     if (err) {
-        ret.first   = buildErrorMsg(clnt_sock);
+        ret.first   = buildErrorMsg();
         ret.second  = buildErrorHtml(err);
         // ret.first += "Content-length: " + ft_to_string(ret.second.length()) + "\r\n\r\n";
     }
     else {
         ret.second  = getContent(clnt_sock);
         if (err)
-            ret.first = buildErrorMsg(clnt_sock);
+            ret.first = buildErrorMsg();
         else {
             ret.first   = getMsg(clnt_sock, ret.second.length());
         }
