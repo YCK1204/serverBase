@@ -66,14 +66,18 @@ void	Http::initializeServer() {
 
 void    Http::runServer()
 {
+	int	select_ret;
+	struct timeval timer;
+
 	initializeServer();
+	timer.tv_sec = 1;
+	timer.tv_usec = 0;
 	while (!flag) {
 		read_event = events;
 		write_event = events;
 		err_event = events;
-		if ((select(fd_max + 1, &read_event, 0, &err_event, NULL)) < 0)
+		if ((select_ret = select(fd_max + 1, &read_event, 0, &err_event, &timer)) < 0)
 			serverFunctionExecuteFailed(136, "select()");
-		
 		clientHandler();
 	}
 

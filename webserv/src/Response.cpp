@@ -118,7 +118,7 @@ std::string Http::getMsg(int clnt_sock, int length) {
     }
     ret += getDate() + "\r\n";
     if (!clients[clnt_sock].connection.compare("keep-alive"))
-        ret += "keep-alive: timeout=" + ft_to_string(TIMEOUT) + ", max=" + ft_to_string(LISTEN_SIZE) + "\r\n";
+        ret += "keep-alive: timeout=" + ft_to_string(TIMEOUT) + ", max=" + ft_to_string(REQUEST_CNT) + "\r\n";
     file_path = getIndexRoot(server, location);
     if (stat(file_path.c_str(), &file_stat) >= 0)
         ret += "Last-Modified: " + formatTime(file_stat.st_mtime) + "\r\n";
@@ -192,21 +192,18 @@ std::string Http::getContent(int clnt_sock) {
     return ret;
 }
 
-
 void    Http::getData(int clnt_sock) {
     std::string req_msg = clients[clnt_sock].request, addr;
     int         cnt = 0;
     size_t      tmp = 0, len;
 
     addr = getAddress(req_msg);
-
     clients[clnt_sock].root         = getRoot(req_msg);
     clients[clnt_sock].http         = getHTTP(req_msg);
     clients[clnt_sock].method       = getMethod(req_msg);
     clients[clnt_sock].http_ver     = getHttpVer(req_msg);
     clients[clnt_sock].connection   = getConnection(req_msg);
     clients[clnt_sock].port         = ft_stoi(getPort(req_msg));
-
     for (; (len = addr.find(".", tmp)) != std::string::npos;) {
         cnt++;
         if (cnt > 3) {
@@ -222,22 +219,77 @@ void    Http::getData(int clnt_sock) {
         clients[clnt_sock].addr[cnt] = 4242;
 }
 
+std::pair<std::string, std::string> Http::getDeleteReseponse(int clnt_sock) {
+    std::string body = clients[clnt_sock].body_request;
+    std::pair<std::string, std::string> ret;
+
+    return ret;
+}
+
+std::string Http::failedSignUp(std::string id, std::string passwd) {
+    std::string ret, msg;
+
+    msg += "<form method=\"post\">\n";
+    msg += "<input type=\"hidden\" name=\"_method\" value=\"post\"/>\n";
+    msg += "<label for=\"name\">닉네임 :</label>\n";
+    msg += "<input type=\"text\" name=\"id\" id=\"id\" value=\"" + id + "\">\n";
+    msg += "<label for=\"password\">비밀번호 :</label>\n";
+    msg += "<input type=\"password\" name=\"password\" id=\"password\" value=\"" + passwd + "\">\n";
+    msg += "<input type=\"submit\" value=\"Submit\">\n";
+    msg += "</form>\n";
+
+    ret = buildHtml(msg);
+    return ret;
+}
+
+bool    Http::isValidPasswd(std::string passwd) {
+    
+}
+
+std::pair<std::string, std::string> Http::getPostReseponse(int clnt_sock) {
+    std::string body = clients[clnt_sock].body_request;
+    std::string method, id, passwd;
+    std::pair<std::string, std::string> ret;
+
+    std::size_t len = body.find("&");
+    method = body.substr(8, len);
+    if (!method.compare("POST")) {
+        id = body.substr(len + 3, body.find("&", len + 1));
+        passwd = body.substr(body.rfind("=") + 1);
+        if (member_info.find(id) != member_info.end()) {
+            ret.second = failedSignUp(id, passwd);
+            ret.first = getMsg(clnt_sock, ret.second.length());
+        } else {
+            if (isValidPasswd(passwd)) {
+
+            } else {
+
+            }
+        }
+    }
+    else
+        ret = getDeleteReseponse(clnt_sock);
+    return ret;
+}
+
 std::pair<std::string, std::string> Http::getResponse(int clnt_sock) {
-    std::string req_msg = clients[clnt_sock].request;
     std::pair<std::string, std::string> ret;
 
     getData(clnt_sock);
     checkRequestMsg(clnt_sock);
-
     if (err) {
         ret.first   = buildErrorMsg();
         ret.second  = buildErrorHtml(err);
     } else {
-        ret.second = getContent(clnt_sock);
-        if (err)
-            ret.first = buildErrorMsg();
-        else
-            ret.first = getMsg(clnt_sock, ret.second.length());
+        if (!clients[clnt_sock].method.compare("POST"))
+            ret = getPostReseponse(clnt_sock);
+        else {
+            ret.second = getContent(clnt_sock);
+            if (err)
+                ret.first = buildErrorMsg();
+            else
+                ret.first = getMsg(clnt_sock, ret.second.length());
+        }
     }
     return ret;
 }

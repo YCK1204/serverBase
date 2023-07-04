@@ -298,18 +298,18 @@ bool compareFiles(const FileInfo& file1, const FileInfo& file2) {
     return file1.name < file2.name;
 }
 
-// std::string Http::formatSize(double size) {
-//     const char* units[] = {"B", "KB", "MB", "GB", "TB"};
-//     int unitIndex = 0;
-//     while (size >= 1024 && unitIndex < 4) {
-//         size /= 1024;
-//         unitIndex++;
-//     }
+std::string Http::formatSize(double size) {
+    const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+    int unitIndex = 0;
+    while (size >= 1024 && unitIndex < 4) {
+        size /= 1024;
+        unitIndex++;
+    }
 
-//     char buffer[100];
-//     sprintf(buffer, "%.2f %s", size, units[unitIndex]);
-//     return std::string(buffer);
-// }
+    char buffer[100];
+    sprintf(buffer, "%.2f %s", size, units[unitIndex]);
+    return std::string(buffer);
+}
 
 std::string Http::formatTime(const time_t& time) {
     struct tm* timeinfo;
@@ -357,8 +357,8 @@ std::string Http::buildAutoindex(std::string server_root, std::string location_r
 			else
             	msg += "        <td><a href=\"" + it->name + "\">" + it->name + "</a></td>\n";
             msg += "        <td>" + formatTime(it->lastModified) + "</td>\n";
-            // double fileSize = static_cast<double>(it->size);
-        //    msg += "        <td>" + formatSize(fileSize) + "</td>\n";
+            double fileSize = static_cast<double>(it->size);
+           msg += "        <td>" + formatSize(fileSize) + "</td>\n";
             msg += "    </tr>\n";
         }
         msg += "    </table>\n";

@@ -62,6 +62,7 @@ void	Http::clientAccept(int serv_sock) {
         "accept function error");
     }
     clientInit(clnt_sk);
+	clients[clnt_sk].request_cnt = 0;
 	addFdSet(clnt_sk, events);
 	fcntl(clnt_sk, F_SETFL, O_NONBLOCK);
 	std::cout << "client connected : " << clnt_sk << std::endl;
@@ -82,13 +83,14 @@ void Http::readRequestMsg(int clnt_sock) {
 		std::size_t len = clients[clnt_sock].request.find("\r\n\r\n");
 		if (len != std::string::npos) {
 			if (clients[clnt_sock].request.find("POST") != std::string::npos) {
-				std::size_t length = clients[clnt_sock].request.find("content-length");
-				if (length != std::string::npos) {
+				std::size_t length = clients[clnt_sock].request.find("Content-Length:");
+				if (length == std::string::npos) {
 					err = 400;
 					writeResponse(clnt_sock);
 				} else {
-					clients[clnt_sock].body_request = clients[clnt_sock].request.substr(len + 5);
-					if (clients[clnt_sock].body_request.length() == static_cast<unsigned long>(ft_stoi(clients[clnt_sock].request.substr(length + 15))))
+					clients[clnt_sock].body_request = clients[clnt_sock].request.substr(len + 4);
+					std::cout << clients[clnt_sock].body_request << std::endl;
+					if (clients[clnt_sock].body_request.length() == static_cast<unsigned long>(ft_stoi(clients[clnt_sock].request.substr(length + 16))))
 						writeResponse(clnt_sock);
 				}
 			}
@@ -114,9 +116,9 @@ void	Http::writeResponse(int clnt_sock) {
 			if (n != -1) {
 				std::string msg = "Response to client : " + ft_to_string(clnt_sock) + ", status=[";
 				if (err != 0)
-					printLog(RED, msg + ft_to_string(err) + "]", STDOUT);
+					printLog(RED, msg + ft_to_string(err) + "], method=[" + clients[clnt_sock].method + "], URI=" + clients[clnt_sock].root, STDOUT);
 				else {
-					msg += ft_to_string(status) + "]";
+					msg += ft_to_string(status) + "], method=[" + clients[clnt_sock].method + "], URI=" + clients[clnt_sock].root;
 					if (status >= 300)
 						printLog(LIME, msg, STDOUT);
 					else if (status >= 200)
@@ -125,10 +127,14 @@ void	Http::writeResponse(int clnt_sock) {
 						printLog(YELLOW, msg, STDOUT);
 				}
 			}
-			if (!clients[clnt_sock].connection.compare("close"))
+			if (++clients[clnt_sock].request_cnt >= REQUEST_CNT)
 				disconnectClient(clnt_sock);
-			else
-				clientInit(clnt_sock);
+			else {
+				if (!clients[clnt_sock].connection.compare("close"))
+					disconnectClient(clnt_sock);
+				else
+					clientInit(clnt_sock);
+			}
 		}
 	}
 }
@@ -140,9 +146,11 @@ void	Http::clientHandler() {
 		else if (FD_ISSET(i, &read_event)) {
 			eventReadHandler(i);
 		}
-		if (clients.find(i) != clients.end()) {
-			if (!clients[i].connection.compare("keep-alive") && (std::time(NULL) - clients[i].last_active_times) > TIMEOUT)
-				disconnectClient(i);
+	}
+	for (std::map<int, ClientData>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (!it->second.connection.compare("keep-alive") && (std::time(NULL) - it->second.last_active_times) > TIMEOUT) {
+			disconnectClient(it->first);
+			break ;
 		}
 	}
 }

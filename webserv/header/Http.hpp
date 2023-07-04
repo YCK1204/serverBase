@@ -28,6 +28,7 @@
 #include "../header/Mime.hpp"
 
 #define LISTEN_SIZE 20
+#define REQUEST_CNT 5
 #define BUF_SIZE 2048
 #define TIMEOUT 2
 #define MAX_ROOT_LEN 30
@@ -118,7 +119,7 @@ typedef struct {
 typedef struct {
     int                                         port;
     int                                         addr[4];
-    int                                         body_size;
+    int                                         request_cnt;
 
     std::string                                 root;
     std::string                                 http;
@@ -145,6 +146,7 @@ private:
     fd_set                                      events, read_event, write_event, err_event;
     std::vector<ServerBlock>                    server;
     std::map<int, ClientData>                   clients;
+    std::map<std::string, std::string>          member_info;
     int                                         err, fd_max, status;
     Mime                                        mime;
     std::vector<struct kevent>                  changeList;
@@ -189,6 +191,7 @@ private:
     std::string                                 spaceTrim(std::string str);
     std::string                                 ft_inet_ntoa(uint32_t ipaddr);
     std::string                                 formatTime(const time_t& time);
+    std::string                                 formatSize(double size);
     std::string                                 buildAutoindex(std::string server_root, std::string location_root);
 
     void                                        printConfigInfo();
@@ -235,6 +238,8 @@ private:
 
     /* response_functions */
     std::pair<std::string, std::string>         getResponse(int clnt_sock);
+    std::pair<std::string, std::string>         getPostReseponse(int clnt_sock);
+    std::pair<std::string, std::string>         getDeleteReseponse(int clnt_sock);
 
     std::string                                 getMsg(int clnt_sock, int length);
     std::string                                 getContent(int clnt_sock);
@@ -245,12 +250,14 @@ private:
     std::string                                 getAddress(std::string req_msg);
     std::string                                 getHttpVer(std::string req_msg);
     std::string                                 getConnection(std::string req_msg);
+    std::string                                 failedSignUp(std::string id, std::string passwd);
     std::string                                 getIndexRoot(ServerBlock server, LocationBlock location);
 
     void                                        getData(int clnt_sock);
     void                                        checkRequestMsg(int clnt_sock);
 
     bool                                        isAutoindex(int clnt_sock);
+    bool                                        isValidPasswd(std::string passwd);
     bool                                        isValidAddress(ServerBlock server, int addr[4]);
     /* response_functions */
     
